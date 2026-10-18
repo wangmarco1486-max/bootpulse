@@ -28,6 +28,7 @@
     .otp-code { letter-spacing: 0.35em; font-variant-numeric: tabular-nums; }
   </style>
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/pro.css">
 </head>
 <body class="h-full flex flex-col bg-slate-950 text-slate-100 overflow-x-hidden antialiased">
 
@@ -58,6 +59,7 @@
           <button onclick="switchView('scenarios')" id="nav-scenarios" class="px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i>Scenarios</button>
           <button onclick="switchView('decisions')" id="nav-decisions" class="px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"><i class="fa-solid fa-clipboard-list mr-1.5"></i>Decision Log</button>
           <button onclick="switchView('academy')" id="nav-academy" class="px-3 py-2 rounded-lg text-slate-400 hover:text-amber-300 hover:bg-slate-800 transition"><i class="fa-solid fa-graduation-cap text-amber-400 mr-1.5"></i>Academy</button>
+          <button onclick="switchView('pro')" id="nav-pro" class="px-3 py-2 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-800 transition"><i class="fa-solid fa-chart-pie mr-1.5"></i>Pro</button>
         </nav>
 
         <div class="flex items-center space-x-3">
@@ -102,10 +104,10 @@
           <div class="space-y-1">
             <div class="inline-flex items-center space-x-2 bg-indigo-500/10 text-indigo-300 text-xs px-3 py-1 rounded-full border border-indigo-500/20 font-medium">
               <i class="fa-solid fa-globe text-emerald-400"></i>
-              <span>Multi-currency • Live FX rates • Unit × Qty • Inflation What-If</span>
+              <span>Multi-currency • Live FX • 12-month runway • Break-even planning</span>
             </div>
-            <h1 class="text-xl sm:text-2xl font-bold text-white">Startup Cash Position & Runway Intelligence</h1>
-            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl">Track cash in any currency, enter bills with different currencies, model ingredient inflation, and get price-adjustment suggestions to protect your margin.</p>
+            <h1 class="text-xl sm:text-2xl font-bold text-white">Know your cash. Plan your next move.</h1>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl">Track income, costs, and cash in one place. See what it takes to break even, then model the decisions that move your business forward.</p>
           </div>
           <button onclick="openAuthModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl font-semibold text-xs shadow-lg transition flex items-center space-x-2">
             <i class="fa-solid fa-envelope-circle-check"></i><span>Login / Save</span>
@@ -164,7 +166,7 @@
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
             <div>
               <h2 class="text-sm font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-chart-area text-indigo-400"></i><span>12-Month Projected Cash</span></h2>
-              <p class="text-xs text-slate-400 mt-0.5">Converted to display currency using live rates</p>
+              <p class="text-xs text-slate-400 mt-0.5">Live FX · direct unit costs scale with sales at the current offer mix</p>
             </div>
             <div class="flex items-center space-x-3 bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-700/60 text-xs">
               <span class="text-slate-300 font-medium">MoM Growth:</span>
@@ -255,90 +257,52 @@
       </div>
     </div>
 
-    <!-- SCENARIOS + INFLATION WHAT-IF -->
+    <!-- BREAK-EVEN + GENERAL BUSINESS SCENARIOS -->
     <div id="view-scenarios" class="hidden space-y-6">
-      <div class="glass-card rounded-2xl p-6 space-y-6">
-        <div>
-          <h2 class="text-lg font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i><span>Scenario & Inflation Sandbox</span></h2>
-          <p class="text-xs text-slate-400 mt-1">Test hiring, price changes, or ingredient inflation. Get price-adjustment advice to protect margin.</p>
+      <section class="pro-page-intro">
+        <div><span class="eyebrow">PLAN THE MATH BEFORE THE MOVE</span><h1>Break-even & scenarios</h1><p>Understand the sales level that covers your operating costs, then test a hire, a new location, or another change using your own numbers.</p></div>
+        <div class="pro-page-intro__side"><span class="eyebrow">YOUR WORKSPACE</span><strong id="scenarioWorkspaceName">Current workspace</strong><p>Figures follow the selected workspace and display currency.</p></div>
+      </section>
+      <section class="pro-module pro-module--wide"><div class="pro-module__heading"><div><span class="eyebrow">ALL PLANS</span><h2>Monthly break-even target</h2><p>Operating costs divided by contribution margin show the revenue needed to cover costs.</p></div></div><div id="breakEvenContent"></div></section>
+      <section class="pro-module pro-module--wide"><div class="pro-module__heading"><div><span class="eyebrow">QUICK WHAT-IF</span><h2>Adjust this month</h2><p>See how extra recurring sales, a recurring cost, or a one-time investment changes monthly cash flow.</p></div></div>
+        <div class="basic-scenario">
+          <div><label>Extra monthly income</label><input type="number" id="customAddRev" value="0" min="0" step="100"></div>
+          <div><label>Extra monthly cost</label><input type="number" id="customAddExp" value="0" min="0" step="100"></div>
+          <div><label>One-time cost</label><input type="number" id="customOneOff" value="0" min="0" step="100"></div>
+          <div class="scenario-actions"><button onclick="runCustomScenario()" class="pro-button">Calculate impact</button><span id="planStatus" class="plan-chip">FREE PLAN</span></div>
         </div>
+        <div id="customScenarioResult" class="hidden forecast-verdict"><span class="eyebrow">SCENARIO RESULT</span><strong>Estimated runway: <span id="customRunwayResult"></span></strong><div id="marginAdviceBox" class="hidden"><p id="marginAdviceText"></p></div></div>
+      </section>
+      <section class="pro-module pro-module--wide" data-pro-module="scenario"><div class="pro-module__heading"><div><span class="eyebrow">PRO · 12-MONTH FORECAST</span><h2>Model a hire or a second location</h2><p>Estimate the timing of added payroll, setup costs, and new-location sales. Monetary assumptions use the current display currency.</p></div></div>
+        <div class="pro-module__content" id="forecastContent"><div class="scenario-form">
+          <div><label>Hourly wage (display currency)</label><input type="number" id="scenarioHourlyRate" value="18" min="0" step="0.5"></div>
+          <div><label>Hours per week</label><input type="number" id="scenarioHoursWeek" value="40" min="0" step="1"></div>
+          <div><label>Workers added</label><input type="number" id="scenarioHeadcount" value="1" min="0" step="1"></div>
+          <div><label>Location monthly cost (display currency)</label><input type="number" id="scenarioLocationCost" value="0" min="0" step="100"></div>
+          <div><label>Other monthly cost (display currency)</label><input type="number" id="scenarioOtherCost" value="0" min="0" step="100"></div>
+          <div><label>Location setup cost (display currency)</label><input type="number" id="scenarioLocationSetup" value="0" min="0" step="500"></div>
+          <div><label>Open in month (1–12)</label><input type="number" id="scenarioLocationMonth" value="6" min="1" max="12" step="1"></div>
+          <div><label>Revenue added at opening (%)</label><input type="number" id="scenarioLocationRevenue" value="30" min="0" max="500" step="5"></div>
+          <div class="scenario-actions"><button onclick="runProForecast()" class="pro-button">Run 12-month forecast</button></div>
+        </div><div id="forecastResult" class="forecast-output"></div></div>
+        <div class="pro-lock-overlay"><div class="pro-lock-overlay__box"><span class="plan-chip">PRO FEATURE</span><h3>Plan the next move with a longer view</h3><p>Preview the 12-month hire and location simulator. Pro access here is a local prototype switch—not a verified paid subscription.</p><button class="pro-button" onclick="setPlanTier('pro')">Enable Pro preview</button></div></div>
+      </section>
+    </div>
 
-        <!-- Preset cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="p-5 bg-slate-900/90 rounded-2xl border-2 border-indigo-500/50">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-bold text-indigo-400 uppercase">Base Plan</span>
-              <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded">Active</span>
-            </div>
-            <p class="text-2xl font-black text-white" id="scenBaseRunway">0.0 mos</p>
-            <p class="text-xs text-slate-400 mt-1">Current structure</p>
-          </div>
-          <div class="p-5 bg-slate-900/90 rounded-2xl border border-slate-800">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-bold text-rose-400 uppercase">Hire Senior Dev</span>
-              <span class="text-[10px] bg-rose-500/10 text-rose-300 px-2 py-0.5 rounded">+$4,500</span>
-            </div>
-            <p class="text-2xl font-black text-white" id="scenHireRunway">0.0 mos</p>
-            <p class="text-xs text-slate-400 mt-1">Extra monthly cost</p>
-          </div>
-          <div class="p-5 bg-slate-900/90 rounded-2xl border border-slate-800">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-bold text-emerald-400 uppercase">+20% Price</span>
-              <span class="text-[10px] bg-emerald-500/10 text-emerald-300 px-2 py-0.5 rounded">+20% Rev</span>
-            </div>
-            <p class="text-2xl font-black text-white" id="scenPriceRunway">0.0 mos</p>
-            <p class="text-xs text-slate-400 mt-1">Raise all prices</p>
-          </div>
-        </div>
-
-        <!-- Custom + Inflation What-If -->
-        <div class="border-t border-slate-800 pt-6 space-y-5">
-          <h3 class="text-sm font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-sliders text-indigo-400"></i><span>Custom What-If & Ingredient Inflation</span></h3>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div>
-              <label class="text-[11px] text-slate-400 font-medium">Extra Monthly Revenue</label>
-              <div class="flex mt-1">
-                <input type="number" id="customAddRev" value="0" class="flex-1 bg-slate-800 border border-slate-700 rounded-l-lg px-3 py-2 text-sm text-white focus:outline-none">
-                <select id="customAddRevCurr" class="bg-slate-800 border border-slate-700 border-l-0 rounded-r-lg px-2 text-xs text-slate-300"></select>
-              </div>
-            </div>
-            <div>
-              <label class="text-[11px] text-slate-400 font-medium">Extra Monthly Expense</label>
-              <div class="flex mt-1">
-                <input type="number" id="customAddExp" value="0" class="flex-1 bg-slate-800 border border-slate-700 rounded-l-lg px-3 py-2 text-sm text-white focus:outline-none">
-                <select id="customAddExpCurr" class="bg-slate-800 border border-slate-700 border-l-0 rounded-r-lg px-2 text-xs text-slate-300"></select>
-              </div>
-            </div>
-            <div>
-              <label class="text-[11px] text-slate-400 font-medium">One-time Cost</label>
-              <div class="flex mt-1">
-                <input type="number" id="customOneOff" value="0" class="flex-1 bg-slate-800 border border-slate-700 rounded-l-lg px-3 py-2 text-sm text-white focus:outline-none">
-                <select id="customOneOffCurr" class="bg-slate-800 border border-slate-700 border-l-0 rounded-r-lg px-2 text-xs text-slate-300"></select>
-              </div>
-            </div>
-            <div>
-              <label class="text-[11px] text-slate-400 font-medium">Cost Inflation %</label>
-              <input type="number" id="customInflationPct" value="0" min="0" max="100" step="1" class="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none" placeholder="e.g. 15 for ingredients">
-            </div>
-          </div>
-
-          <div class="flex flex-wrap gap-3">
-            <button onclick="runCustomScenario()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition">Calculate Impact</button>
-            <button onclick="runRestaurantInflationExample()" class="bg-amber-600/80 hover:bg-amber-500 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition flex items-center space-x-2">
-              <i class="fa-solid fa-utensils"></i><span>Restaurant Example (+15% ingredients)</span>
-            </button>
-          </div>
-
-          <div id="customScenarioResult" class="hidden p-5 rounded-xl bg-slate-900/90 border border-indigo-500/30 space-y-3">
-            <p class="text-sm text-slate-300">New runway: <span id="customRunwayResult" class="font-bold text-indigo-300 text-xl"></span></p>
-            <div id="marginAdviceBox" class="hidden p-4 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm text-amber-100 space-y-2">
-              <p class="font-semibold text-amber-300 flex items-center space-x-2"><i class="fa-solid fa-lightbulb"></i><span>Price Adjustment Suggestion</span></p>
-              <p id="marginAdviceText"></p>
-            </div>
-          </div>
-        </div>
+    <!-- PREMIUM ANALYTICS -->
+    <div id="view-pro" class="hidden space-y-6">
+      <section class="pro-page-intro">
+        <div><span class="eyebrow">BOOT PULSE · PRO</span><h1>Better signals for better decisions.</h1><p>Spot unusual cost movement, understand product and service contribution, test a 12-month plan, and compare key ratios with your chosen peers.</p></div>
+        <div class="pro-page-intro__side"><span class="eyebrow">CURRENT ACCESS</span><strong id="planStatusPro">Free plan</strong><p>This tier control previews product gating locally. It does not check billing status.</p></div>
+      </section>
+      <div class="pro-tier-callout"><div><span class="eyebrow">PLAN PREVIEW</span><p>Free keeps core cash tracking, cash flow, basic scenarios, and break-even. Pro modules are previewable on this device only. Tier switching does not process payment or verify a subscription.</p></div><div class="pro-topline"><span data-pro-status>FREE PLAN</span><button class="pro-button" onclick="setPlanTier(document.body.classList.contains('plan-pro') ? 'free' : 'pro')" id="tierPreviewButton">Enable Pro preview</button></div></div>
+      <section class="pro-module pro-module--wide history-module"><div class="pro-module__heading"><div><span class="eyebrow">ALL PLANS · SAVED HISTORY</span><h2>Keep a record of your numbers</h2><p>Free users can see these historical snapshots. Save one as a baseline, then save again after your next period update.</p></div><button class="pro-button pro-button--quiet" onclick="saveComparisonSnapshot()">Save current snapshot</button></div><div id="freeHistoryContent"></div></section>
+      <div class="pro-layout">
+        <section class="pro-module" data-pro-module="guardian"><div class="pro-module__heading"><div><span class="eyebrow">A · FINANCIAL GUARDIAN</span><h2>Find changes worth a closer look</h2><p>Compare current costs and income with a snapshot you saved. Large cost jumps alongside flat sales become a review signal.</p></div></div><div class="pro-module__content" id="guardianContent"></div><div class="pro-lock-overlay"><div class="pro-lock-overlay__box"><span class="plan-chip">PRO FEATURE</span><h3>Catch cost movement early</h3><p>Save month-to-month snapshots to compare expenses with revenue.</p><button class="pro-button" onclick="setPlanTier('pro')">Preview this feature</button></div></div></section>
+        <section class="pro-module" data-pro-module="benchmark"><div class="pro-module__heading"><div><span class="eyebrow">D · PEER COMPARISON</span><h2>Know your ratios</h2><p>Compare labor share and contribution margin with peer figures you choose.</p></div></div><div class="pro-module__content"><div id="benchmarkContent"></div><div class="benchmark-controls"><label>Business type<select id="benchmarkIndustry" onchange="saveBenchmarkProfile()"><option>Professional services</option><option>Retail</option><option>Hospitality</option><option>Construction</option><option>Other small enterprise</option></select></label><label>Team size<select id="benchmarkSize" onchange="saveBenchmarkProfile()"><option>1–5</option><option>6–20</option><option>21–50</option><option>51+</option></select></label><label>Peer labor / revenue (%)<input type="number" id="benchmarkLabor" oninput="saveBenchmarkProfile()" min="0" max="100" step="0.1" placeholder="Enter peer ratio"></label><label>Peer contribution margin (%)<input type="number" id="benchmarkMargin" oninput="saveBenchmarkProfile()" min="0" max="100" step="0.1" placeholder="Enter peer ratio"></label></div></div><div class="pro-lock-overlay"><div class="pro-lock-overlay__box"><span class="plan-chip">PRO FEATURE</span><h3>Compare with your chosen peer group</h3><p>Enter ratios from a trusted source. This demo does not invent industry averages.</p><button class="pro-button" onclick="setPlanTier('pro')">Preview this feature</button></div></div></section>
+        <section class="pro-module pro-module--wide" data-pro-module="margin"><div class="pro-module__heading"><div><span class="eyebrow">B · OFFER MARGIN ANALYZER</span><h2>See which offers carry the business</h2><p>Compare per-unit contribution, margin, monthly sales volume, and optional labor time across any product or service.</p></div></div><div class="pro-module__content" id="marginContent"></div><div class="pro-lock-overlay"><div class="pro-lock-overlay__box"><span class="plan-chip">PRO FEATURE</span><h3>Find your high-contribution offers</h3><p>Add unit direct costs to income items, then preview the relative stars and review list.</p><button class="pro-button" onclick="setPlanTier('pro')">Preview this feature</button></div></div></section>
       </div>
+      <section class="pro-module pro-module--wide" data-pro-module="scenario"><div class="pro-module__heading"><div><span class="eyebrow">C · CASH-FLOW SIMULATOR</span><h2>One action, twelve months of consequences</h2><p>Run the same hire and second-location scenario from the Scenarios tab. The model uses workspace growth assumptions and saved seasonality history when available.</p></div><button class="pro-button pro-button--quiet" onclick="switchView('scenarios')">Open scenario inputs</button></div><div class="pro-note">Seasonality remains off until snapshots cover all 12 calendar months. The forecast is a planning estimate, not a guarantee.</div><div class="pro-lock-overlay"><div class="pro-lock-overlay__box"><span class="plan-chip">PRO FEATURE</span><h3>Test hires and expansion before committing</h3><p>Model added payroll, a new location, one-time costs, and revenue assumptions.</p><button class="pro-button" onclick="setPlanTier('pro')">Preview this feature</button></div></div></section>
     </div>
 
     <!-- DECISION LOG -->
@@ -364,7 +328,7 @@
           <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-2xl"><i class="fa-solid fa-graduation-cap"></i></div>
           <div>
             <h2 class="text-xl font-extrabold text-white">Zero-Jargon Financial Academy</h2>
-            <p class="text-xs text-slate-400 mt-0.5">Core concepts every founder needs.</p>
+            <p class="text-xs text-slate-400 mt-0.5">Core concepts every small-business owner needs.</p>
           </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
@@ -381,8 +345,8 @@
             <p class="text-slate-300">Enter each bill in its original currency. BootPulse converts everything to your chosen display currency using live rates so you always see a consistent picture.</p>
           </div>
           <div class="p-4 bg-slate-900/90 rounded-xl border border-slate-800 space-y-2">
-            <h3 class="text-sm font-bold text-indigo-300"><i class="fa-solid fa-utensils text-amber-400 mr-2"></i>Ingredient Inflation</h3>
-            <p class="text-slate-300">When costs rise (e.g. +15% on ingredients), the What-If tool shows the new runway and suggests the % price increase needed to keep the same profit margin.</p>
+            <h3 class="text-sm font-bold text-indigo-300"><i class="fa-solid fa-scale-balanced text-amber-400 mr-2"></i>Break-even</h3>
+            <p class="text-slate-300">Break-even sales cover the operating costs after direct costs. Add unit costs to your offers and compare the estimated sales target with current revenue.</p>
           </div>
         </div>
       </div>
@@ -391,7 +355,7 @@
 
   <footer class="bg-slate-950 border-t border-slate-900 py-6 mt-12">
     <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3">
-      <div>© 2026 BootPulse • Multi-currency runway engine for solopreneurs</div>
+      <div>© 2026 BootPulse • Cash and break-even planning for small enterprises</div>
       <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
         <button id="btnResetOrRestore" onclick="resetOrRestoreDemo()" class="hover:text-indigo-400">Reset Demo</button>
         <button onclick="clearAllData()" class="hover:text-rose-400">Clear All Data</button>
@@ -450,11 +414,11 @@
         <input type="hidden" id="inputItemType">
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1">Name</label>
-          <input type="text" id="inputItemName" required placeholder="e.g. Fresh Salmon / Monthly SaaS" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <input type="text" id="inputItemName" required placeholder="e.g. Monthly plan / Design service / Equipment rental" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1">Unit Cost</label>
+            <label class="block text-xs font-semibold text-slate-300 mb-1" id="unitValueLabel">Unit price / cost</label>
             <input type="number" id="inputUnitCost" required min="0" step="0.01" placeholder="12.50" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
           </div>
           <div>
@@ -463,8 +427,15 @@
           </div>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Currency of this bill</label>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Currency</label>
           <select id="selectItemCurrency" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none"></select>
+        </div>
+        <div id="marginCostFields" class="hidden">
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="block text-xs font-semibold text-slate-300 mb-1">Direct cost per unit (optional)</label><input type="number" id="inputDirectCost" min="0" step="0.01" placeholder="0.00" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white"></div>
+            <div><label class="block text-xs font-semibold text-slate-300 mb-1">Labor hours per unit (optional)</label><input type="number" id="inputLaborHours" min="0" step="0.1" placeholder="0.0" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white"></div>
+          </div>
+          <p class="mt-2 text-[10px] text-slate-500">Enter direct unit costs here or in operating costs, not both; matching costs twice overstates outflows.</p>
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1">Category</label>
@@ -561,8 +532,8 @@
       targetRunway: 12,
       growthRate: 5,
       revenues: [
-        { id:'r1', name:'SaaS Subscriptions', unitCost:45, qty:100, currency:'USD', category:'Subscription', type:'recurring' },
-        { id:'r2', name:'Consulting Setup', unitCost:1200, qty:1, currency:'USD', category:'Services', type:'one-off' }
+        { id:'r1', name:'SaaS Subscriptions', unitCost:45, qty:100, currency:'USD', category:'Subscription', type:'recurring', directCost:5, laborHoursPerUnit:0.05 },
+        { id:'r2', name:'Consulting Setup', unitCost:1200, qty:1, currency:'USD', category:'Services', type:'one-off', directCost:360, laborHoursPerUnit:6 }
       ],
       expenses: [
         { id:'e1', name:'Engineering Salaries', unitCost:6500, qty:1, currency:'USD', category:'Payroll', type:'recurring' },
@@ -588,6 +559,7 @@
     let appState = {
       currentUser: null,
       displayCurrency: 'USD',
+      tier: 'free',
       activeWorkspaceId: 'ws_default',
       workspaces: { ws_default: JSON.parse(JSON.stringify(defaultWorkspace)) }
     };
@@ -599,6 +571,7 @@
       return {
         currentUser: appState.currentUser,
         displayCurrency: appState.displayCurrency,
+        tier: appState.tier || 'free',
         activeWorkspaceId: appState.activeWorkspaceId,
         workspaces: JSON.parse(JSON.stringify(appState.workspaces)),
         savedAt: new Date().toISOString()
@@ -628,6 +601,7 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
           currentUser: appState.currentUser,
           displayCurrency: appState.displayCurrency,
+          tier: appState.tier || 'free',
           activeWorkspaceId: appState.activeWorkspaceId,
           workspaces: appState.workspaces
         }));
@@ -682,11 +656,13 @@
         Object.assign(appState, {
           currentUser: snap.data.currentUser,
           displayCurrency: snap.data.displayCurrency || 'USD',
+          tier: snap.data.tier || 'free',
           activeWorkspaceId: snap.data.activeWorkspaceId || 'ws_default',
           workspaces: snap.data.workspaces
         });
         saveState();
         renderWorkspacesDropdown();
+        syncWorkspaceInputs();
         recalculateAll();
         renderDecisions();
         updateAuthHeaderUI();
@@ -705,6 +681,7 @@
       await fetchLiveRates();
       initChart();
       renderWorkspacesDropdown();
+      syncWorkspaceInputs();
       updateAuthHeaderUI();
       recalculateAll();
       renderDecisions();
@@ -739,11 +716,25 @@
       return convert(itemMonthlyAmount(item), item.currency || 'USD', appState.displayCurrency);
     }
 
+    function directCostInDisplay(item) {
+      return convert((parseFloat(item.directCost) || 0) * (parseFloat(item.qty) || 0), item.currency || 'USD', appState.displayCurrency);
+    }
+
+    function syncWorkspaceInputs() {
+      const ws = getActiveWorkspace();
+      const growth = document.getElementById('growthRateInput');
+      const target = document.getElementById('targetRunwayGoal');
+      if (growth) growth.value = String(ws.growthRate ?? 5);
+      if (target) target.value = String(ws.targetRunway ?? 12);
+    }
+
     window.recalculateAll = function() {
       const ws = getActiveWorkspace();
-      const growth = parseFloat(document.getElementById('growthRateInput')?.value || ws.growthRate || 5);
-      const target = parseFloat(document.getElementById('targetRunwayGoal')?.value || ws.targetRunway || 12);
-      ws.growthRate = growth; ws.targetRunway = target;
+      const growthRaw = document.getElementById('growthRateInput')?.value;
+      const targetRaw = document.getElementById('targetRunwayGoal')?.value;
+      const growth = growthRaw === undefined || growthRaw === '' ? (ws.growthRate ?? 5) : Number(growthRaw);
+      const target = targetRaw === undefined || targetRaw === '' ? (ws.targetRunway ?? 12) : Number(targetRaw);
+      ws.growthRate = Number.isFinite(growth) ? growth : 5; ws.targetRunway = Number.isFinite(target) ? target : 12;
 
       const cashDisp = convert(ws.cash, ws.cashCurrency || 'USD', appState.displayCurrency);
 
@@ -751,11 +742,16 @@
       const expItems = ws.expenses || [];
 
       const totalRevDisp = revItems.reduce((s,i) => s + itemInDisplay(i), 0);
-      const totalExpDisp = expItems.reduce((s,i) => s + itemInDisplay(i), 0);
+      const totalOperatingExpDisp = expItems.reduce((s,i) => s + itemInDisplay(i), 0);
+      const totalDirectCostDisp = revItems.reduce((s,i) => s + directCostInDisplay(i), 0);
+      const totalExpDisp = totalOperatingExpDisp + totalDirectCostDisp;
 
-      // for runway we use recurring only
-      const recurringRev = revItems.filter(i => i.type !== 'one-off').reduce((s,i) => s + itemInDisplay(i), 0);
-      const recurringExp = expItems.filter(i => i.type !== 'one-off').reduce((s,i) => s + itemInDisplay(i), 0);
+      // Recurring direct costs are variable outflows on recurring income items.
+      const recurringRevenueItems = revItems.filter(i => i.type !== 'one-off');
+      const recurringRev = recurringRevenueItems.reduce((s,i) => s + itemInDisplay(i), 0);
+      const recurringExpOperating = expItems.filter(i => i.type !== 'one-off').reduce((s,i) => s + itemInDisplay(i), 0);
+      const recurringDirectCost = recurringRevenueItems.reduce((s,i) => s + directCostInDisplay(i), 0);
+      const recurringExp = recurringExpOperating + recurringDirectCost;
       const netBurn = recurringExp - recurringRev;
       const runway = netBurn <= 0 ? 999 : cashDisp / netBurn;
 
@@ -800,9 +796,9 @@
 
       renderRevenueItems();
       renderExpenseItems();
-      renderScenarios(cashDisp, recurringRev, recurringExp);
-      renderCashflowMatrix(cashDisp, recurringRev, recurringExp, growth);
-      updateChartData(cashDisp, recurringRev, recurringExp, growth);
+      renderScenarios(cashDisp, recurringRev, recurringExpOperating, recurringDirectCost);
+      renderCashflowMatrix(cashDisp, recurringRev, recurringExpOperating, growth, recurringDirectCost);
+      updateChartData(cashDisp, recurringRev, recurringExpOperating, growth, recurringDirectCost);
       saveState();
     };
 
@@ -878,33 +874,34 @@
       });
     }
 
-    function updateChartData(cash, rev, exp, growth) {
+    function updateChartData(cash, rev, exp, growth, directCost = 0) {
       if (!forecastChart) return;
       const labels = ['Now','M1','M2','M3','M4','M5','M6','M7','M8','M9','M10','M11','M12'];
-      const data = []; let c = cash, r = rev; const m = 1 + growth/100;
+      const data = []; let c = cash, r = rev, variableCost = directCost; const m = 1 + growth/100;
       labels.forEach((_,i) => {
         if (i===0) data.push(Math.round(c));
-        else { r *= m; c = Math.max(0, c - (exp - r)); data.push(Math.round(c)); }
+        else { r *= m; variableCost *= m; c = Math.max(0, c + r - exp - variableCost); data.push(Math.round(c)); }
       });
       forecastChart.data.labels = labels;
       forecastChart.data.datasets[0].data = data;
       forecastChart.update();
     }
 
-    function renderCashflowMatrix(cash, rev, exp, growth) {
+    function renderCashflowMatrix(cash, rev, exp, growth, directCost = 0) {
       const tbody = document.getElementById('matrixTableBody');
       const sym = getSymbol(appState.displayCurrency);
-      let open = cash, r = rev; const m = 1 + growth/100;
+      let open = cash, r = rev, variableCost = directCost; const m = 1 + growth/100;
       let rowO = `<tr class="bg-slate-900/40"><td class="p-3 font-semibold text-white">Opening</td>`;
       let rowI = `<tr><td class="p-3 font-semibold text-emerald-400">Inflows</td>`;
       let rowOut = `<tr><td class="p-3 font-semibold text-rose-400">Outflows</td>`;
       let rowC = `<tr class="bg-indigo-950/40 font-bold"><td class="p-3 text-indigo-300">Closing</td>`;
       for (let i=1;i<=12;i++) {
-        if (i>1) r *= m;
-        const close = Math.max(0, open + r - exp);
+        if (i>1) { r *= m; variableCost *= m; }
+        const totalOutflow = exp + variableCost;
+        const close = Math.max(0, open + r - totalOutflow);
         rowO += `<td class="p-3 text-right">${sym}${Math.round(open).toLocaleString()}</td>`;
         rowI += `<td class="p-3 text-right text-emerald-400">+${sym}${Math.round(r).toLocaleString()}</td>`;
-        rowOut += `<td class="p-3 text-right text-rose-400">-${sym}${Math.round(exp).toLocaleString()}</td>`;
+        rowOut += `<td class="p-3 text-right text-rose-400">-${sym}${Math.round(totalOutflow).toLocaleString()}</td>`;
         rowC += `<td class="p-3 text-right text-indigo-300">${sym}${Math.round(close).toLocaleString()}</td>`;
         open = close;
       }
@@ -914,14 +911,17 @@
     window.exportCashflowCSV = function() {
       const ws = getActiveWorkspace();
       const cash = convert(ws.cash, ws.cashCurrency||'USD', appState.displayCurrency);
-      const rev = (ws.revenues||[]).filter(i=>i.type!=='one-off').reduce((s,i)=>s+itemInDisplay(i),0);
+      const recurringRevenueItems = (ws.revenues||[]).filter(i=>i.type!=='one-off');
+      const rev = recurringRevenueItems.reduce((s,i)=>s+itemInDisplay(i),0);
       const exp = (ws.expenses||[]).filter(i=>i.type!=='one-off').reduce((s,i)=>s+itemInDisplay(i),0);
+      const direct = recurringRevenueItems.reduce((s,i)=>s+directCostInDisplay(i),0);
       const rows = [['Month','Opening','Revenue','Expenses','Closing']];
-      let open = cash, r = rev; const m = 1+(ws.growthRate||5)/100;
+      let open = cash, r = rev, variableCost = direct; const m = 1+(ws.growthRate ?? 5)/100;
       for (let i=1;i<=12;i++) {
-        if (i>1) r*=m;
-        const close = Math.max(0, open+r-exp);
-        rows.push([i, Math.round(open), Math.round(r), Math.round(exp), Math.round(close)]);
+        if (i>1) { r*=m; variableCost*=m; }
+        const totalOutflow = exp + variableCost;
+        const close = Math.max(0, open+r-totalOutflow);
+        rows.push([i, Math.round(open), Math.round(r), Math.round(totalOutflow), Math.round(close)]);
         open = close;
       }
       const a = document.createElement('a');
@@ -929,57 +929,7 @@
       a.download = 'bootpulse-cashflow.csv'; a.click();
     };
 
-    // ===================== SCENARIOS + INFLATION =====================
-    function renderScenarios(cash, rev, exp) {
-      const net = exp - rev;
-      document.getElementById('scenBaseRunway').textContent = net<=0 ? 'Profitable' : (cash/net).toFixed(1)+' mos';
-      const netH = (exp+4500) - rev;
-      document.getElementById('scenHireRunway').textContent = netH<=0 ? 'Profitable' : (cash/netH).toFixed(1)+' mos';
-      const netP = exp - rev*1.2;
-      document.getElementById('scenPriceRunway').textContent = netP<=0 ? 'Profitable' : (cash/netP).toFixed(1)+' mos';
-    }
-
-    window.runCustomScenario = function() {
-      const ws = getActiveWorkspace();
-      const addRev = convert(parseFloat(document.getElementById('customAddRev').value)||0, document.getElementById('customAddRevCurr').value, appState.displayCurrency);
-      const addExp = convert(parseFloat(document.getElementById('customAddExp').value)||0, document.getElementById('customAddExpCurr').value, appState.displayCurrency);
-      const oneOff = convert(parseFloat(document.getElementById('customOneOff').value)||0, document.getElementById('customOneOffCurr').value, appState.displayCurrency);
-      const inflPct = parseFloat(document.getElementById('customInflationPct').value)||0;
-
-      let rev = (ws.revenues||[]).filter(i=>i.type!=='one-off').reduce((s,i)=>s+itemInDisplay(i),0) + addRev;
-      let exp = (ws.expenses||[]).filter(i=>i.type!=='one-off').reduce((s,i)=>s+itemInDisplay(i),0) + addExp;
-      // apply inflation on expenses
-      exp = exp * (1 + inflPct/100);
-      const cash = Math.max(0, convert(ws.cash, ws.cashCurrency||'USD', appState.displayCurrency) - oneOff);
-      const net = exp - rev;
-      const runway = net<=0 ? '∞ (Profitable)' : (cash/net).toFixed(1) + ' months';
-
-      document.getElementById('customRunwayResult').textContent = runway;
-      document.getElementById('customScenarioResult').classList.remove('hidden');
-
-      // Margin / price advice
-      const adviceBox = document.getElementById('marginAdviceBox');
-      const adviceText = document.getElementById('marginAdviceText');
-      if (inflPct > 0 && rev > 0) {
-        // To keep same absolute margin (rev - exp), newRev needed = oldRev + extra cost from inflation
-        const extraCost = exp - (exp / (1+inflPct/100));
-        const neededRevIncreasePct = (extraCost / rev) * 100;
-        adviceText.innerHTML = `Ingredient / cost inflation of <strong>${inflPct}%</strong> adds roughly <strong>${getSymbol(appState.displayCurrency)}${Math.round(extraCost).toLocaleString()}</strong> to monthly expenses.<br>
-        To keep the same profit margin you would need to raise prices by approximately <strong>${neededRevIncreasePct.toFixed(1)}%</strong>.<br>
-        Example: if a dish currently sells for $20, new price ≈ $${(20 * (1+neededRevIncreasePct/100)).toFixed(2)}.`;
-        adviceBox.classList.remove('hidden');
-      } else {
-        adviceBox.classList.add('hidden');
-      }
-    };
-
-    window.runRestaurantInflationExample = function() {
-      document.getElementById('customInflationPct').value = 15;
-      document.getElementById('customAddRev').value = 0;
-      document.getElementById('customAddExp').value = 0;
-      document.getElementById('customOneOff').value = 0;
-      runCustomScenario();
-    };
+    // Premium scenario calculations and rendering are provided by pro.js.
 
     // ===================== AUTH (demo OTP) =====================
     window.openAuthModal = () => { document.getElementById('modalAuth').classList.remove('hidden'); resetToStep1(); };
@@ -1040,10 +990,14 @@
     // ===================== ITEM MODAL =====================
     window.openAddItemModal = function(type) {
       document.getElementById('inputItemType').value = type;
-      document.getElementById('itemModalTitle').textContent = type === 'revenue' ? 'Add Revenue' : 'Add Cost';
-      const cats = type === 'revenue' ? ['Subscription','Services','Food Sales','Other'] : ['Payroll','Ingredients','Software','Rent','Marketing','Utilities','Other'];
+      document.getElementById('itemModalTitle').textContent = type === 'revenue' ? 'Add Income / Offer' : 'Add Cost';
+      const unitLabel = document.getElementById('unitValueLabel'); if (unitLabel) unitLabel.textContent = type === 'revenue' ? 'Price per unit' : 'Cost per unit';
+      const cats = type === 'revenue' ? ['Product Sales','Services','Subscription','Other'] : ['Payroll','Direct costs','Software','Rent','Marketing','Utilities','Other'];
       document.getElementById('selectItemCategory').innerHTML = cats.map(c=>`<option value="${c}">${c}</option>`).join('');
       document.getElementById('inputItemName').value = '';
+      document.getElementById('marginCostFields')?.classList.toggle('hidden', type !== 'revenue');
+      if (document.getElementById('inputDirectCost')) document.getElementById('inputDirectCost').value = '';
+      if (document.getElementById('inputLaborHours')) document.getElementById('inputLaborHours').value = '';
       document.getElementById('inputUnitCost').value = '';
       document.getElementById('inputQty').value = '1';
       document.getElementById('selectItemCurrency').value = appState.displayCurrency;
@@ -1074,7 +1028,10 @@
       const itemType = document.getElementById('selectItemRecurring').value;
       if (!name || unitCost < 0 || qty < 0) return;
       const ws = getActiveWorkspace();
-      const item = { id: 'item_'+Date.now(), name, unitCost, qty, currency, category, type: itemType };
+      const directCostRaw = document.getElementById('inputDirectCost')?.value?.trim() ?? '';
+      const directCost = type === 'revenue' && directCostRaw !== '' ? Number(directCostRaw) : null;
+      if (directCost !== null && (!Number.isFinite(directCost) || directCost < 0)) return;
+      const item = { id: 'item_'+Date.now(), name, unitCost, qty, currency, category, type: itemType, directCost, laborHoursPerUnit: type === 'revenue' ? (parseFloat(document.getElementById('inputLaborHours')?.value) || 0) : 0 };
       if (type === 'revenue') ws.revenues.push(item); else ws.expenses.push(item);
       closeItemModal(); recalculateAll();
     };
@@ -1088,6 +1045,13 @@
 
     // ===================== OTHER HELPERS =====================
     window.changeCurrency = function(c) {
+      const previous = appState.displayCurrency;
+      if (previous !== c) {
+        ['customAddRev','customAddExp','customOneOff','scenarioHourlyRate','scenarioLocationCost','scenarioOtherCost','scenarioLocationSetup'].forEach(id => {
+          const input = document.getElementById(id);
+          if (input && input.value !== '' && Number.isFinite(Number(input.value))) input.value = convert(Number(input.value), previous, c).toFixed(2);
+        });
+      }
       appState.displayCurrency = c;
       recalculateAll();
     };
@@ -1109,7 +1073,7 @@
         decisions: []
       };
       appState.activeWorkspaceId = id;
-      renderWorkspacesDropdown(); recalculateAll();
+      renderWorkspacesDropdown(); syncWorkspaceInputs(); recalculateAll();
     };
 
     function renderWorkspacesDropdown() {
@@ -1119,10 +1083,17 @@
         `<option value="${w.id}" ${w.id===appState.activeWorkspaceId?'selected':''}>${escapeHtml(w.name)}</option>`
       ).join('');
     }
-    window.switchWorkspace = id => { if (appState.workspaces[id]) { appState.activeWorkspaceId = id; recalculateAll(); renderDecisions(); } };
+    window.switchWorkspace = id => {
+      if (appState.workspaces[id]) {
+        appState.activeWorkspaceId = id;
+        syncWorkspaceInputs();
+        recalculateAll();
+        renderDecisions();
+      }
+    };
 
     window.switchView = function(v) {
-      ['dashboard','cashflow','scenarios','decisions','academy'].forEach(x => {
+      ['dashboard','cashflow','scenarios','decisions','academy','pro'].forEach(x => {
         document.getElementById('view-'+x)?.classList.toggle('hidden', x!==v);
         const nav = document.getElementById('nav-'+x);
         if (nav) {
@@ -1131,6 +1102,8 @@
         }
       });
       if (v==='decisions') renderDecisions();
+      if (v==='scenarios') { const label = document.getElementById('scenarioWorkspaceName'); if (label) label.textContent = getActiveWorkspace().name || 'Current workspace'; }
+      if (v==='pro') window.renderProExperience?.();
     };
 
     function renderDecisions() {
@@ -1175,6 +1148,7 @@
         appState.activeWorkspaceId = 'ws_default';
         saveState();
         renderWorkspacesDropdown();
+        syncWorkspaceInputs();
         recalculateAll();
         renderDecisions();
         alert('Demo data restored.');
@@ -1183,13 +1157,11 @@
         if (!confirm('Reset the CURRENT workspace back to the original demo numbers?\n\n(A snapshot will be saved so you can Undo.)')) return;
         pushHistory('Before Reset Demo');
         const id = appState.activeWorkspaceId;
+        const previousName = getActiveWorkspace().name || 'Main Workspace';
         appState.workspaces[id] = JSON.parse(JSON.stringify(defaultWorkspace));
         appState.workspaces[id].id = id;
-        // keep the workspace name if user renamed it
-        const prev = getActiveWorkspace();
-        if (prev && prev.name && prev.name !== 'Main Workspace') {
-          // name already overwritten by default; re-apply if needed is optional
-        }
+        appState.workspaces[id].name = previousName;
+        syncWorkspaceInputs();
         saveState();
         recalculateAll();
         renderDecisions();
@@ -1208,6 +1180,7 @@
         appState.workspaces[id].name = name;
       });
       saveState();
+      syncWorkspaceInputs();
       recalculateAll();
       renderDecisions();
       updateHistoryButton();
@@ -1216,5 +1189,6 @@
 
     function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   </script>
+  <script src="/pro.js"></script>
 </body>
 </html>
