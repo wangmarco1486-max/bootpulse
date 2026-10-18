@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BootPulse – Multi-Currency Financial Planning & Runway Engine</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: { brand: { 500:'#6366f1', 600:'#4f46e5' } }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    .glass-card { background: rgba(30,41,59,0.75); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.08); }
+    .otp-code { letter-spacing: 0.35em; font-variant-numeric: tabular-nums; }
+  </style>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="h-full flex flex-col bg-slate-950 text-slate-100 overflow-x-hidden antialiased">
+
+  <!-- TOP NAV -->
+  <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-3 cursor-pointer" onclick="switchView('dashboard')">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+              <i class="fa-solid fa-heart-pulse text-white text-xl"></i>
+            </div>
+            <div>
+              <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">BootPulse</span>
+              <span class="text-[10px] px-2 py-0.5 ml-1.5 rounded-full bg-indigo-500/20 text-indigo-300 font-semibold border border-indigo-500/30 uppercase">v3.1 FX</span>
+            </div>
+          </div>
+          <div class="hidden md:flex items-center space-x-2 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 text-xs">
+            <i class="fa-solid fa-building text-indigo-400"></i>
+            <select id="selectWorkspace" onchange="switchWorkspace(this.value)" class="bg-transparent text-slate-200 font-semibold focus:outline-none cursor-pointer max-w-[150px]"></select>
+            <button onclick="promptCreateWorkspace()" class="text-slate-400 hover:text-indigo-300 p-1"><i class="fa-solid fa-plus-circle"></i></button>
+          </div>
+        </div>
+
+        <nav class="hidden lg:flex items-center space-x-1 text-xs font-medium">
+          <button onclick="switchView('dashboard')" id="nav-dashboard" class="px-3 py-2 rounded-lg transition text-indigo-400 bg-indigo-500/10 border border-indigo-500/20"><i class="fa-solid fa-chart-line mr-1.5"></i>Dashboard</button>
+          <button onclick="switchView('cashflow')" id="nav-cashflow" class="px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"><i class="fa-solid fa-table-cells mr-1.5"></i>12M Cashflow</button>
+          <button onclick="switchView('scenarios')" id="nav-scenarios" class="px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i>Scenarios</button>
+          <button onclick="switchView('decisions')" id="nav-decisions" class="px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"><i class="fa-solid fa-clipboard-list mr-1.5"></i>Decision Log</button>
+          <button onclick="switchView('academy')" id="nav-academy" class="px-3 py-2 rounded-lg text-slate-400 hover:text-amber-300 hover:bg-slate-800 transition"><i class="fa-solid fa-graduation-cap text-amber-400 mr-1.5"></i>Academy</button>
+        </nav>
+
+        <div class="flex items-center space-x-3">
+          <!-- Display Currency + Live Rate Indicator -->
+          <div class="flex items-center space-x-1.5 bg-slate-800/80 border border-slate-700 rounded-lg px-2 py-1">
+            <select id="selectCurrency" onchange="changeCurrency(this.value)" class="bg-transparent text-xs text-slate-300 focus:outline-none font-medium">
+              <option value="USD">$ USD</option>
+              <option value="EUR">€ EUR</option>
+              <option value="GBP">£ GBP</option>
+              <option value="HKD">HK$ HKD</option>
+              <option value="SGD">S$ SGD</option>
+              <option value="CNY">¥ CNY</option>
+              <option value="JPY">¥ JPY</option>
+              <option value="AUD">A$ AUD</option>
+            </select>
+            <button onclick="fetchLiveRates()" title="Refresh live rates" class="text-slate-400 hover:text-indigo-300 text-xs p-0.5">
+              <i class="fa-solid fa-arrows-rotate" id="rateRefreshIcon"></i>
+            </button>
+          </div>
+          <div id="authProfileContainer">
+            <button onclick="openAuthModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3.5 py-1.5 rounded-lg font-semibold shadow-md shadow-indigo-600/30 transition flex items-center space-x-1.5">
+              <i class="fa-solid fa-right-to-bracket"></i><span>Login</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- LIVE RATE STATUS BAR -->
+  <div id="rateStatusBar" class="bg-slate-900/80 border-b border-slate-800 text-[11px] text-slate-400 px-4 py-1.5 flex items-center justify-between">
+    <span id="rateStatusText">Loading live exchange rates…</span>
+    <span id="rateTimestamp" class="text-slate-500"></span>
+  </div>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- DASHBOARD -->
+    <div id="view-dashboard" class="space-y-6">
+      <div id="guestNoticeBanner" class="glass-card rounded-2xl p-5 bg-gradient-to-r from-indigo-950/60 via-slate-900 to-purple-950/40 border border-indigo-500/30">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <div class="inline-flex items-center space-x-2 bg-indigo-500/10 text-indigo-300 text-xs px-3 py-1 rounded-full border border-indigo-500/20 font-medium">
+              <i class="fa-solid fa-globe text-emerald-400"></i>
+              <span>Multi-currency • Live FX rates • Unit × Qty • Inflation What-If</span>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-bold text-white">Startup Cash Position & Runway Intelligence</h1>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl">Track cash in any currency, enter bills with different currencies, model ingredient inflation, and get price-adjustment suggestions to protect your margin.</p>
+          </div>
+          <button onclick="openAuthModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl font-semibold text-xs shadow-lg transition flex items-center space-x-2">
+            <i class="fa-solid fa-envelope-circle-check"></i><span>Login / Save</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Metric Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-card rounded-2xl p-5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Bank Cash</span>
+            <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20"><i class="fa-solid fa-vault text-sm"></i></div>
+          </div>
+          <div class="mt-3 text-2xl sm:text-3xl font-black text-white" id="valCardCash">$0</div>
+          <div class="mt-2 text-[11px] text-slate-400 flex justify-between">
+            <span>In display currency</span>
+            <button onclick="promptEditOpeningCash()" class="text-indigo-400 hover:underline font-semibold">Update</button>
+          </div>
+        </div>
+        <div class="glass-card rounded-2xl p-5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Monthly Revenue</span>
+            <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20"><i class="fa-solid fa-arrow-trend-up text-sm"></i></div>
+          </div>
+          <div class="mt-3 text-2xl sm:text-3xl font-black text-emerald-400" id="valCardRev">$0</div>
+          <div class="mt-2 text-[11px] text-slate-400 flex justify-between">
+            <span id="cntRevStreams">0 items</span>
+            <button onclick="openAddItemModal('revenue')" class="text-emerald-400 hover:underline font-semibold">+ Add Income</button>
+          </div>
+        </div>
+        <div class="glass-card rounded-2xl p-5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Monthly Expenses</span>
+            <div class="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center border border-rose-500/20"><i class="fa-solid fa-fire text-sm"></i></div>
+          </div>
+          <div class="mt-3 text-2xl sm:text-3xl font-black text-rose-400" id="valCardBurn">$0</div>
+          <div class="mt-2 text-[11px] text-slate-400 flex justify-between">
+            <span id="cntExpItems">0 items</span>
+            <button onclick="openAddItemModal('expense')" class="text-rose-400 hover:underline font-semibold">+ Add Cost</button>
+          </div>
+        </div>
+        <div class="glass-card rounded-2xl p-5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Financial Runway</span>
+            <div class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20"><i class="fa-solid fa-hourglass-half text-sm"></i></div>
+          </div>
+          <div class="mt-3 text-3xl font-extrabold text-indigo-300" id="valCardRunway">0.0</div>
+          <div id="badgeRunwayStatus" class="mt-2 text-[10px] font-bold px-2 py-0.5 rounded-full inline-block bg-slate-800 text-slate-300 border border-slate-700">Calculating…</div>
+        </div>
+      </div>
+
+      <!-- Chart + Health -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 glass-card rounded-2xl p-5">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 class="text-sm font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-chart-area text-indigo-400"></i><span>12-Month Projected Cash</span></h2>
+              <p class="text-xs text-slate-400 mt-0.5">Converted to display currency using live rates</p>
+            </div>
+            <div class="flex items-center space-x-3 bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-700/60 text-xs">
+              <span class="text-slate-300 font-medium">MoM Growth:</span>
+              <input type="number" id="growthRateInput" value="5" min="-50" max="100" step="1" oninput="recalculateAll()" class="w-14 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-center font-bold text-white focus:outline-none">
+              <span class="text-slate-400">%</span>
+            </div>
+          </div>
+          <div class="relative w-full h-72 sm:h-80"><canvas id="cashForecastChart"></canvas></div>
+        </div>
+        <div class="glass-card rounded-2xl p-5 space-y-4 flex flex-col justify-between">
+          <div>
+            <div class="border-b border-slate-800 pb-3 mb-4 flex items-center justify-between">
+              <h3 class="text-sm font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-stethoscope text-indigo-400"></i><span>Financial Health</span></h3>
+              <span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full">Live FX</span>
+            </div>
+            <div class="space-y-3 text-xs">
+              <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                <span class="text-slate-400 text-[11px]">Net Monthly Cash Flow</span>
+                <div class="flex items-center justify-between mt-1">
+                  <span class="text-lg font-extrabold text-white" id="valNetBurnAmount">$0</span>
+                  <span class="text-[10px] font-semibold px-2 py-0.5 rounded" id="badgeNetBurnType">Deficit</span>
+                </div>
+              </div>
+              <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                <span class="text-slate-400 text-[11px]">Zero-Cash Point</span>
+                <p class="text-base font-bold text-amber-300 mt-1" id="valZeroCashDate">—</p>
+              </div>
+              <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                <span class="text-slate-400 text-[11px]">Target Runway (months)</span>
+                <div class="flex items-center justify-between mt-1">
+                  <input type="number" id="targetRunwayGoal" value="12" min="1" max="36" oninput="recalculateAll()" class="w-20 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-white font-bold text-xs focus:outline-none">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center space-x-2">
+            <i class="fa-solid fa-circle-info text-indigo-400"></i>
+            <span>Keep ≥ 6 months buffer before major hiring.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Revenue & Expense lists -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="glass-card rounded-2xl p-5">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div class="flex items-center space-x-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span><h3 class="font-bold text-white text-sm">Revenue Streams</h3></div>
+            <button onclick="openAddItemModal('revenue')" class="text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 px-3 py-1.5 rounded-lg border border-emerald-500/30 font-semibold"><i class="fa-solid fa-plus text-[10px] mr-1"></i>Add</button>
+          </div>
+          <div id="listRevenueItems" class="mt-3 space-y-2 max-h-80 overflow-y-auto pr-1"></div>
+        </div>
+        <div class="glass-card rounded-2xl p-5">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div class="flex items-center space-x-2"><span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span><h3 class="font-bold text-white text-sm">Operating Costs</h3></div>
+            <button onclick="openAddItemModal('expense')" class="text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 px-3 py-1.5 rounded-lg border border-rose-500/30 font-semibold"><i class="fa-solid fa-plus text-[10px] mr-1"></i>Add</button>
+          </div>
+          <div id="listExpenseItems" class="mt-3 space-y-2 max-h-80 overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 12M CASHFLOW -->
+    <div id="view-cashflow" class="hidden space-y-6">
+      <div class="glass-card rounded-2xl p-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-table-cells text-indigo-400"></i><span>12-Month Cash Flow (Display Currency)</span></h2>
+            <p class="text-xs text-slate-400 mt-1">All values converted using current live rates</p>
+          </div>
+          <button onclick="exportCashflowCSV()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs px-3 py-2 rounded-xl font-semibold flex items-center space-x-2">
+            <i class="fa-solid fa-download text-indigo-400"></i><span>Export CSV</span>
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 bg-slate-900/60">
+                <th class="p-3 font-semibold text-slate-300 min-w-[130px]">Line Item</th>
+                <th class="p-3 font-semibold text-right">M1</th><th class="p-3 font-semibold text-right">M2</th><th class="p-3 font-semibold text-right">M3</th>
+                <th class="p-3 font-semibold text-right">M4</th><th class="p-3 font-semibold text-right">M5</th><th class="p-3 font-semibold text-right">M6</th>
+                <th class="p-3 font-semibold text-right">M7</th><th class="p-3 font-semibold text-right">M8</th><th class="p-3 font-semibold text-right">M9</th>
+                <th class="p-3 font-semibold text-right">M10</th><th class="p-3 font-semibold text-right">M11</th><th class="p-3 font-semibold text-right">M12</th>
+              </tr>
+            </thead>
+            <tbody id="matrixTableBody" class="divide-y divide-slate-800/60 text-slate-300 font-mono"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCENARIOS + INFLATION WHAT-IF -->
+    <div id="view-scenarios" class="hidden space-y-6">
+      <div class="glass-card rounded-2xl p-6 space-y-6">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i><span>Scenario & Inflation Sandbox</span></h2>
+          <p class="text-xs text-slate-400 mt-1">Test hiring, price changes, or ingredient inflation. Get price-adjustment advice to protect margin.</p>
+        </div>
+
+        <!-- Preset cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-5 bg-slate-900/90 rounded-2xl border-2 border-indigo-500/50">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold text-indigo-400 uppercase">Base Plan</span>
+              <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded">Active</span>
+            </div>
+            <p class="text-2xl font-black text-white" id="scenBaseRunway">0.0 mos</p>
+            <p class="text-xs text-slate-400 mt-1">Current structure</p>
+          </div>
+          <div class="p-5 bg-slate-900/90 rounded-2xl border border-slate-800">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold text-rose-400 uppercase">Hire Senior Dev</span>
+              <span class="text-[10px] bg-rose-500/10 text-rose-300 px-2 py-0.5 rounded">+$4,500</span>
+            </div>
+            <p class="text-2xl font-black text-white" id="scenHireRunway">0.0 mos</p>
+            <p class="text-xs text-slate-400 mt-1">Extra monthly cost</p>
+          </div>
+          <div class="p-5 bg-slate-900/90 rounded-2xl border border-slate-800">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold text-emerald-400 uppercase">+20% Price</span>
+              <span class="text-[10px] bg-emerald-500/10 text-emerald-300 px-2 py-0.5 rounded">+20% Rev</span>
+            </div>
+            <p class="text-2xl font-black text-white" id="scenPriceRunway">0.0 mos</p>
+            <p class="text-xs text-slate-400 mt-1">Raise all prices</p>
+          </div>
+        </div>
+
+        <!-- Custom + Inflation What-If -->
+        <div class="border-t border-slate-800 pt-6 space-y-5">
+          <h3 class="text-sm font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-sliders text-indigo-400"></i><span>Custom What-If & Ingredient Inflation</span></h3>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div>
+              <label class="text-[11px] text-slate-400 font-medium">Extra Monthly Revenue</label>
+              <div class="flex mt-1">
+                <input type="number" id="customAddRev" value="0" class="flex-1 bg-slate-800 border border-slate-700 rounded-l-lg px-3 py-2 text-sm text-white focus:outline-none">
+                <select id="customAddRevCurr" class="bg-slate-800 border border-slate-700 border-l-0 rounded-r-lg px-2 text-xs text-slate-300"></select>
+              </div>
+            </div>
+            <div>
+              <label class="text-[11px] text-slate-400 font-medium">Extra Monthly Expense</label>
+              <div class="flex mt-1">
+                <input type="number" id="customAddExp" value="0" class="flex-1 bg-slate-800 border border-slate-700 rounded-l-lg px-3 py-2 text-sm text-white focus:outline-none">
+                <select id="customAddExpCurr" class="bg-slate-800 border border-slate-700 border-l-0 rounded-r-lg px-2 text-xs text-slate-300"></select>
+              </div>
+            </div>
+            <div>
+              <label class="text-[11px] text-slate-400 font-medium">One-time Cost</label>
+              <div class="flex mt-1">
+                <input type="number" id="customOneOff" value="0" class="flex-1 bg-slate-800 border border-slate-700 rounded-l-lg px-3 py-2 text-sm text-white focus:outline-none">
+                <select id="customOneOffCurr" class="bg-slate-800 border border-slate-700 border-l-0 rounded-r-lg px-2 text-xs text-slate-300"></select>
+              </div>
+            </div>
+            <div>
+              <label class="text-[11px] text-slate-400 font-medium">Cost Inflation %</label>
+              <input type="number" id="customInflationPct" value="0" min="0" max="100" step="1" class="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none" placeholder="e.g. 15 for ingredients">
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-3">
+            <button onclick="runCustomScenario()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition">Calculate Impact</button>
+            <button onclick="runRestaurantInflationExample()" class="bg-amber-600/80 hover:bg-amber-500 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition flex items-center space-x-2">
+              <i class="fa-solid fa-utensils"></i><span>Restaurant Example (+15% ingredients)</span>
+            </button>
+          </div>
+
+          <div id="customScenarioResult" class="hidden p-5 rounded-xl bg-slate-900/90 border border-indigo-500/30 space-y-3">
+            <p class="text-sm text-slate-300">New runway: <span id="customRunwayResult" class="font-bold text-indigo-300 text-xl"></span></p>
+            <div id="marginAdviceBox" class="hidden p-4 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm text-amber-100 space-y-2">
+              <p class="font-semibold text-amber-300 flex items-center space-x-2"><i class="fa-solid fa-lightbulb"></i><span>Price Adjustment Suggestion</span></p>
+              <p id="marginAdviceText"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DECISION LOG -->
+    <div id="view-decisions" class="hidden space-y-6">
+      <div class="glass-card rounded-2xl p-6 space-y-5">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-clipboard-list text-indigo-400"></i><span>Decision Log</span></h2>
+            <p class="text-xs text-slate-400 mt-1">Record important financial decisions and their expected impact.</p>
+          </div>
+          <button onclick="openDecisionModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-4 py-2 rounded-xl font-semibold flex items-center space-x-2">
+            <i class="fa-solid fa-plus"></i><span>Log Decision</span>
+          </button>
+        </div>
+        <div id="decisionList" class="space-y-3"></div>
+      </div>
+    </div>
+
+    <!-- ACADEMY -->
+    <div id="view-academy" class="hidden space-y-6">
+      <div class="glass-card rounded-2xl p-6 space-y-6">
+        <div class="flex items-center space-x-3">
+          <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-2xl"><i class="fa-solid fa-graduation-cap"></i></div>
+          <div>
+            <h2 class="text-xl font-extrabold text-white">Zero-Jargon Financial Academy</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Core concepts every founder needs.</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div class="p-4 bg-slate-900/90 rounded-xl border border-slate-800 space-y-2">
+            <h3 class="text-sm font-bold text-indigo-300"><i class="fa-solid fa-fire text-rose-400 mr-2"></i>Burn Rate</h3>
+            <p class="text-slate-300">Gross Burn = total money leaving the bank each month.<br>Net Burn = Gross Expenses − Revenue. Negative Net Burn = profit.</p>
+          </div>
+          <div class="p-4 bg-slate-900/90 rounded-xl border border-slate-800 space-y-2">
+            <h3 class="text-sm font-bold text-indigo-300"><i class="fa-solid fa-hourglass-start text-amber-400 mr-2"></i>Runway</h3>
+            <p class="text-slate-300">Months until cash reaches zero.<br><strong>Runway = Cash ÷ Net Monthly Burn</strong>.</p>
+          </div>
+          <div class="p-4 bg-slate-900/90 rounded-xl border border-slate-800 space-y-2">
+            <h3 class="text-sm font-bold text-indigo-300"><i class="fa-solid fa-globe text-emerald-400 mr-2"></i>Multi-Currency</h3>
+            <p class="text-slate-300">Enter each bill in its original currency. BootPulse converts everything to your chosen display currency using live rates so you always see a consistent picture.</p>
+          </div>
+          <div class="p-4 bg-slate-900/90 rounded-xl border border-slate-800 space-y-2">
+            <h3 class="text-sm font-bold text-indigo-300"><i class="fa-solid fa-utensils text-amber-400 mr-2"></i>Ingredient Inflation</h3>
+            <p class="text-slate-300">When costs rise (e.g. +15% on ingredients), the What-If tool shows the new runway and suggests the % price increase needed to keep the same profit margin.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-slate-950 border-t border-slate-900 py-6 mt-12">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3">
+      <div>© 2026 BootPulse • Multi-currency runway engine for solopreneurs</div>
+      <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+        <button id="btnResetOrRestore" onclick="resetOrRestoreDemo()" class="hover:text-indigo-400">Reset Demo</button>
+        <button onclick="clearAllData()" class="hover:text-rose-400">Clear All Data</button>
+        <button id="btnUndoHistory" onclick="undoFromHistory()" class="hover:text-amber-400 hidden">Undo Last Clear</button>
+        <button onclick="switchView('academy')" class="hover:text-indigo-400">Academy</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- AUTH MODAL (same as before) -->
+  <div id="modalAuth" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      <div class="text-center mb-5">
+        <div class="w-12 h-12 rounded-2xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center mx-auto mb-3"><i class="fa-solid fa-envelope-shield text-xl"></i></div>
+        <h3 class="text-xl font-extrabold text-white">Create Account & Verify</h3>
+        <p class="text-xs text-slate-400 mt-1">Demo OTP – code shown on screen</p>
+      </div>
+      <div class="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200">Assignment Demo Mode: real email needs a backend. Code is displayed below.</div>
+      <form id="formAuthStep1" onsubmit="handleRequestOTP(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Email</label>
+          <input type="email" id="inputAuthEmail" required placeholder="founder@startup.com" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Password (min 6)</label>
+          <input type="password" id="inputAuthPass" required minlength="6" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-sm">Send Code</button>
+      </form>
+      <form id="formAuthStep2" onsubmit="handleVerifyOTP(event)" class="space-y-4 hidden">
+        <p class="text-xs text-slate-300 text-center">Code for <strong id="txtSentEmailDisplay"></strong></p>
+        <div class="text-center p-4 rounded-xl bg-indigo-950/60 border border-indigo-500/40">
+          <p class="text-[11px] text-indigo-300 mb-1 uppercase font-semibold">Demo OTP</p>
+          <p id="displayOtpCode" class="text-3xl font-black text-white otp-code">------</p>
+          <p class="text-[10px] text-slate-400 mt-2">Or use <code class="bg-slate-800 px-1 rounded">123456</code></p>
+        </div>
+        <input type="text" id="inputOtpCode" required maxlength="6" placeholder="000000" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-center text-lg font-bold tracking-widest text-white focus:outline-none">
+        <div class="flex justify-between text-xs">
+          <span class="text-slate-400">Expires <span id="txtCountdownDisplay" class="font-mono text-indigo-300">02:00</span></span>
+          <button type="button" id="btnResendOtp" onclick="handleResendOTP()" disabled class="text-indigo-400 disabled:opacity-40">Resend</button>
+        </div>
+        <div id="otpStatusBanner" class="hidden text-xs p-2.5 rounded-lg text-center"></div>
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm">Verify & Login</button>
+        <button type="button" onclick="resetToStep1()" class="w-full text-xs text-slate-400 py-1">← Back</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADD ITEM MODAL (Unit Cost × Qty + Currency) -->
+  <div id="modalItem" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <button onclick="closeItemModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      <h3 id="itemModalTitle" class="text-lg font-bold text-white mb-4">Add Item</h3>
+      <form onsubmit="handleSaveItem(event)" class="space-y-4">
+        <input type="hidden" id="inputItemType">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Name</label>
+          <input type="text" id="inputItemName" required placeholder="e.g. Fresh Salmon / Monthly SaaS" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Unit Cost</label>
+            <input type="number" id="inputUnitCost" required min="0" step="0.01" placeholder="12.50" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Quantity / month</label>
+            <input type="number" id="inputQty" required min="0" step="0.01" value="1" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Currency of this bill</label>
+          <select id="selectItemCurrency" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Category</label>
+          <select id="selectItemCategory" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Type</label>
+          <select id="selectItemRecurring" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+            <option value="recurring">Recurring (every month)</option>
+            <option value="one-off">One-off</option>
+          </select>
+        </div>
+        <div class="p-3 bg-slate-800/60 rounded-lg text-xs text-slate-300">
+          Total this month: <span id="previewItemTotal" class="font-bold text-white">—</span>
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-sm">Save Item</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- DECISION MODAL -->
+  <div id="modalDecision" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="closeDecisionModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      <h3 class="text-lg font-bold text-white mb-4">Log Financial Decision</h3>
+      <form onsubmit="handleSaveDecision(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Title</label>
+          <input type="text" id="inputDecisionTitle" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Expected Impact</label>
+          <input type="text" id="inputDecisionImpact" placeholder="e.g. -1.2 months runway" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Notes</label>
+          <textarea id="inputDecisionNotes" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none"></textarea>
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-sm">Save</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ===================== LIVE RATES =====================
+    // Fallback rates (approx, will be overwritten by live fetch)
+    let fxRates = { USD:1, EUR:0.89, GBP:0.75, HKD:7.85, SGD:1.28, CNY:6.69, JPY:158, AUD:1.44, CAD:1.41 };
+    let ratesLoaded = false;
+
+    async function fetchLiveRates() {
+      const icon = document.getElementById('rateRefreshIcon');
+      if (icon) icon.classList.add('fa-spin');
+      try {
+        const res = await fetch('https://cdn.moneyconvert.net/api/latest.json');
+        const data = await res.json();
+        if (data && data.rates) {
+          fxRates = { USD: 1, ...data.rates };
+          ratesLoaded = true;
+          document.getElementById('rateStatusText').textContent = 'Live rates loaded (base USD)';
+          document.getElementById('rateTimestamp').textContent = 'Updated ' + new Date().toLocaleTimeString();
+          recalculateAll();
+        }
+      } catch (e) {
+        document.getElementById('rateStatusText').textContent = 'Using fallback rates (offline)';
+        console.warn('FX fetch failed, using fallback', e);
+      }
+      if (icon) icon.classList.remove('fa-spin');
+    }
+
+    function convert(amount, fromCurr, toCurr) {
+      if (!fromCurr || !toCurr || fromCurr === toCurr) return amount;
+      const fromRate = fxRates[fromCurr] || 1; // units of fromCurr per 1 USD
+      const toRate = fxRates[toCurr] || 1;
+      // amount in fromCurr → USD → toCurr
+      const inUSD = amount / fromRate;
+      return inUSD * toRate;
+    }
+
+    function getSymbol(c) {
+      return { USD:'$', EUR:'€', GBP:'£', HKD:'HK$', SGD:'S$', CNY:'¥', JPY:'¥', AUD:'A$', CAD:'C$' }[c] || c + ' ';
+    }
+
+    // ===================== STATE =====================
+    const STORAGE_KEY = 'bootpulse_v31_fx';
+    const HISTORY_KEY = 'bootpulse_v31_history';
+    const MAX_HISTORY = 8; // keep last 8 snapshots
+    const CURRENCIES = ['USD','EUR','GBP','HKD','SGD','CNY','JPY','AUD'];
+
+    const defaultWorkspace = {
+      id: 'ws_default',
+      name: 'Main Workspace',
+      cash: 75000,
+      cashCurrency: 'USD',
+      targetRunway: 12,
+      growthRate: 5,
+      revenues: [
+        { id:'r1', name:'SaaS Subscriptions', unitCost:45, qty:100, currency:'USD', category:'Subscription', type:'recurring' },
+        { id:'r2', name:'Consulting Setup', unitCost:1200, qty:1, currency:'USD', category:'Services', type:'one-off' }
+      ],
+      expenses: [
+        { id:'e1', name:'Engineering Salaries', unitCost:6500, qty:1, currency:'USD', category:'Payroll', type:'recurring' },
+        { id:'e2', name:'AWS Hosting', unitCost:750, qty:1, currency:'USD', category:'Software', type:'recurring' },
+        { id:'e3', name:'Marketing Ads', unitCost:1200, qty:1, currency:'USD', category:'Marketing', type:'recurring' }
+      ],
+      decisions: []
+    };
+
+    // Empty workspace template (used after Clear All)
+    const emptyWorkspace = {
+      id: 'ws_default',
+      name: 'Main Workspace',
+      cash: 0,
+      cashCurrency: 'USD',
+      targetRunway: 12,
+      growthRate: 5,
+      revenues: [],
+      expenses: [],
+      decisions: []
+    };
+
+    let appState = {
+      currentUser: null,
+      displayCurrency: 'USD',
+      activeWorkspaceId: 'ws_default',
+      workspaces: { ws_default: JSON.parse(JSON.stringify(defaultWorkspace)) }
+    };
+
+    let otpTimerInterval = null, otpSecondsRemaining = 120, generatedOtpCode = null, forecastChart = null;
+
+    // ===================== PERSISTENCE + HISTORY =====================
+    function snapshotState() {
+      return {
+        currentUser: appState.currentUser,
+        displayCurrency: appState.displayCurrency,
+        activeWorkspaceId: appState.activeWorkspaceId,
+        workspaces: JSON.parse(JSON.stringify(appState.workspaces)),
+        savedAt: new Date().toISOString()
+      };
+    }
+
+    function pushHistory(label) {
+      try {
+        let hist = [];
+        const raw = localStorage.getItem(HISTORY_KEY);
+        if (raw) hist = JSON.parse(raw);
+        hist.unshift({ label: label || 'Auto snapshot', data: snapshotState() });
+        if (hist.length > MAX_HISTORY) hist = hist.slice(0, MAX_HISTORY);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
+        updateHistoryButton();
+      } catch(e) { console.warn('History save failed', e); }
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) Object.assign(appState, JSON.parse(raw));
+      } catch(e){}
+    }
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          currentUser: appState.currentUser,
+          displayCurrency: appState.displayCurrency,
+          activeWorkspaceId: appState.activeWorkspaceId,
+          workspaces: appState.workspaces
+        }));
+      } catch(e){}
+      updateResetRestoreButton();
+    }
+
+    function isWorkspaceEmpty(ws) {
+      if (!ws) return true;
+      return (ws.cash === 0 || ws.cash === null) &&
+             (!ws.revenues || ws.revenues.length === 0) &&
+             (!ws.expenses || ws.expenses.length === 0);
+    }
+
+    function isAllDataEmpty() {
+      return Object.values(appState.workspaces).every(isWorkspaceEmpty);
+    }
+
+    function updateResetRestoreButton() {
+      const btn = document.getElementById('btnResetOrRestore');
+      if (!btn) return;
+      if (isAllDataEmpty()) {
+        btn.textContent = 'Restore Demo Data';
+        btn.className = 'hover:text-emerald-400 font-semibold';
+      } else {
+        btn.textContent = 'Reset Demo';
+        btn.className = 'hover:text-indigo-400';
+      }
+    }
+
+    function updateHistoryButton() {
+      const btn = document.getElementById('btnUndoHistory');
+      if (!btn) return;
+      try {
+        const hist = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+        if (hist.length > 0) {
+          btn.classList.remove('hidden');
+          btn.title = 'Restore: ' + (hist[0].label || 'previous version') + ' (' + (hist[0].data?.savedAt ? new Date(hist[0].data.savedAt).toLocaleString() : '') + ')';
+        } else {
+          btn.classList.add('hidden');
+        }
+      } catch(e) { btn.classList.add('hidden'); }
+    }
+
+    window.undoFromHistory = function() {
+      try {
+        const hist = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+        if (!hist.length) { alert('No history available.'); return; }
+        if (!confirm('Restore the previous version?\n\n' + (hist[0].label || 'Snapshot') + '\nSaved: ' + (hist[0].data?.savedAt ? new Date(hist[0].data.savedAt).toLocaleString() : 'unknown'))) return;
+        const snap = hist.shift();
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
+        Object.assign(appState, {
+          currentUser: snap.data.currentUser,
+          displayCurrency: snap.data.displayCurrency || 'USD',
+          activeWorkspaceId: snap.data.activeWorkspaceId || 'ws_default',
+          workspaces: snap.data.workspaces
+        });
+        saveState();
+        renderWorkspacesDropdown();
+        recalculateAll();
+        renderDecisions();
+        updateAuthHeaderUI();
+        updateHistoryButton();
+        alert('Previous version restored successfully.');
+      } catch(e) {
+        alert('Could not restore history.');
+        console.error(e);
+      }
+    };
+
+    // ===================== INIT =====================
+    window.onload = async function() {
+      loadState();
+      populateCurrencySelects();
+      await fetchLiveRates();
+      initChart();
+      renderWorkspacesDropdown();
+      updateAuthHeaderUI();
+      recalculateAll();
+      renderDecisions();
+      updateResetRestoreButton();
+      updateHistoryButton();
+      // live preview for unit×qty
+      ['inputUnitCost','inputQty'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', updateItemPreview);
+      });
+      document.getElementById('selectItemCurrency')?.addEventListener('change', updateItemPreview);
+    };
+
+    function populateCurrencySelects() {
+      const opts = CURRENCIES.map(c => `<option value="${c}">${getSymbol(c)} ${c}</option>`).join('');
+      ['selectItemCurrency','customAddRevCurr','customAddExpCurr','customOneOffCurr'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = opts;
+      });
+      document.getElementById('selectCurrency').value = appState.displayCurrency;
+    }
+
+    // ===================== CORE CALC =====================
+    function getActiveWorkspace() {
+      return appState.workspaces[appState.activeWorkspaceId] || appState.workspaces.ws_default;
+    }
+
+    function itemMonthlyAmount(item) {
+      return (parseFloat(item.unitCost) || 0) * (parseFloat(item.qty) || 0);
+    }
+
+    function itemInDisplay(item) {
+      return convert(itemMonthlyAmount(item), item.currency || 'USD', appState.displayCurrency);
+    }
+
+    window.recalculateAll = function() {
+      const ws = getActiveWorkspace();
+      const growth = parseFloat(document.getElementById('growthRateInput')?.value || ws.growthRate || 5);
+      const target = parseFloat(document.getElementById('targetRunwayGoal')?.value || ws.targetRunway || 12);
+      ws.growthRate = growth; ws.targetRunway = target;
+
+      const cashDisp = convert(ws.cash, ws.cashCurrency || 'USD', appState.displayCurrency);
+
+      const revItems = ws.revenues || [];
+      const expItems = ws.expenses || [];
+
+      const totalRevDisp = revItems.reduce((s,i) => s + itemInDisplay(i), 0);
+      const totalExpDisp = expItems.reduce((s,i) => s + itemInDisplay(i), 0);
+
+      // for runway we use recurring only
+      const recurringRev = revItems.filter(i => i.type !== 'one-off').reduce((s,i) => s + itemInDisplay(i), 0);
+      const recurringExp = expItems.filter(i => i.type !== 'one-off').reduce((s,i) => s + itemInDisplay(i), 0);
+      const netBurn = recurringExp - recurringRev;
+      const runway = netBurn <= 0 ? 999 : cashDisp / netBurn;
+
+      const sym = getSymbol(appState.displayCurrency);
+
+      document.getElementById('valCardCash').textContent = sym + Math.round(cashDisp).toLocaleString();
+      document.getElementById('valCardRev').textContent = sym + Math.round(totalRevDisp).toLocaleString();
+      document.getElementById('valCardBurn').textContent = sym + Math.round(totalExpDisp).toLocaleString();
+
+      const valR = document.getElementById('valCardRunway');
+      const badge = document.getElementById('badgeRunwayStatus');
+      if (netBurn <= 0) {
+        valR.textContent = '∞';
+        badge.className = 'mt-2 text-[10px] font-bold px-2.5 py-0.5 rounded-full inline-block bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+        badge.textContent = 'Profitable';
+      } else {
+        valR.textContent = runway.toFixed(1);
+        if (runway < 6) {
+          badge.className = 'mt-2 text-[10px] font-bold px-2.5 py-0.5 rounded-full inline-block bg-rose-500/20 text-rose-400 border border-rose-500/30';
+          badge.textContent = '⚠️ High Risk (<6 mo)';
+        } else if (runway < target) {
+          badge.className = 'mt-2 text-[10px] font-bold px-2.5 py-0.5 rounded-full inline-block bg-amber-500/20 text-amber-400 border border-amber-500/30';
+          badge.textContent = `Below ${target}M target`;
+        } else {
+          badge.className = 'mt-2 text-[10px] font-bold px-2.5 py-0.5 rounded-full inline-block bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+          badge.textContent = 'Healthy Buffer';
+        }
+      }
+
+      document.getElementById('valNetBurnAmount').textContent = sym + Math.round(Math.abs(netBurn)).toLocaleString();
+      const badgeNet = document.getElementById('badgeNetBurnType');
+      if (netBurn > 0) { badgeNet.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-rose-500/20 text-rose-400'; badgeNet.textContent = 'Deficit'; }
+      else { badgeNet.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400'; badgeNet.textContent = 'Surplus'; }
+
+      if (netBurn > 0) {
+        const d = new Date(); d.setMonth(d.getMonth() + Math.floor(runway));
+        document.getElementById('valZeroCashDate').textContent = d.toLocaleDateString('default',{month:'short',year:'numeric'});
+      } else document.getElementById('valZeroCashDate').textContent = 'Never (Self-sustaining)';
+
+      document.getElementById('cntRevStreams').textContent = revItems.length + ' items';
+      document.getElementById('cntExpItems').textContent = expItems.length + ' items';
+
+      renderRevenueItems();
+      renderExpenseItems();
+      renderScenarios(cashDisp, recurringRev, recurringExp);
+      renderCashflowMatrix(cashDisp, recurringRev, recurringExp, growth);
+      updateChartData(cashDisp, recurringRev, recurringExp, growth);
+      saveState();
+    };
+
+    // ===================== RENDER LISTS =====================
+    function renderRevenueItems() {
+      const ws = getActiveWorkspace();
+      const box = document.getElementById('listRevenueItems');
+      const sym = getSymbol(appState.displayCurrency);
+      if (!ws.revenues.length) { box.innerHTML = '<p class="text-xs text-slate-500 italic p-3 text-center">No revenue yet</p>'; return; }
+      box.innerHTML = ws.revenues.map(item => {
+        const totalDisp = itemInDisplay(item);
+        const orig = getSymbol(item.currency) + itemMonthlyAmount(item).toLocaleString();
+        return `<div class="flex items-center justify-between p-2.5 bg-slate-900/80 rounded-xl border border-slate-800 text-xs">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center"><i class="fa-solid fa-arrow-up text-[10px]"></i></div>
+            <div>
+              <p class="font-semibold text-white">${escapeHtml(item.name)}</p>
+              <span class="text-[10px] text-slate-400">${item.unitCost} × ${item.qty} ${item.currency} • ${item.category} • ${item.type}</span>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <div class="text-right">
+              <div class="font-extrabold text-emerald-400">+${sym}${Math.round(totalDisp).toLocaleString()}</div>
+              <div class="text-[10px] text-slate-500">${orig}</div>
+            </div>
+            <button onclick="deleteItem('revenue','${item.id}')" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderExpenseItems() {
+      const ws = getActiveWorkspace();
+      const box = document.getElementById('listExpenseItems');
+      const sym = getSymbol(appState.displayCurrency);
+      if (!ws.expenses.length) { box.innerHTML = '<p class="text-xs text-slate-500 italic p-3 text-center">No expenses yet</p>'; return; }
+      box.innerHTML = ws.expenses.map(item => {
+        const totalDisp = itemInDisplay(item);
+        const orig = getSymbol(item.currency) + itemMonthlyAmount(item).toLocaleString();
+        return `<div class="flex items-center justify-between p-2.5 bg-slate-900/80 rounded-xl border border-slate-800 text-xs">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center"><i class="fa-solid fa-arrow-down text-[10px]"></i></div>
+            <div>
+              <p class="font-semibold text-white">${escapeHtml(item.name)}</p>
+              <span class="text-[10px] text-slate-400">${item.unitCost} × ${item.qty} ${item.currency} • ${item.category} • ${item.type}</span>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <div class="text-right">
+              <div class="font-extrabold text-rose-400">-${sym}${Math.round(totalDisp).toLocaleString()}</div>
+              <div class="text-[10px] text-slate-500">${orig}</div>
+            </div>
+            <button onclick="deleteItem('expense','${item.id}')" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ===================== CHART & MATRIX =====================
+    function initChart() {
+      const ctx = document.getElementById('cashForecastChart').getContext('2d');
+      forecastChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: [], datasets: [{ data: [], borderColor: '#285746', backgroundColor: 'rgba(40,87,70,0.09)', fill: true, tension: 0.35, borderWidth: 2.5, pointRadius: 3 }] },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${getSymbol(appState.displayCurrency)}${c.parsed.y.toLocaleString()}` } } },
+          scales: {
+            x: { grid: { color: 'rgba(15,23,42,0.07)' }, ticks: { color: '#718078', font: { size: 10 } } },
+            y: { grid: { color: 'rgba(15,23,42,0.07)' }, ticks: { color: '#718078', font: { size: 10 }, callback: v => getSymbol(appState.displayCurrency) + (v/1000)+'k' } }
+          }
+        }
+      });
+    }
+
+    function updateChartData(cash, rev, exp, growth) {
+      if (!forecastChart) return;
+      const labels = ['Now','M1','M2','M3','M4','M5','M6','M7','M8','M9','M10','M11','M12'];
+      const data = []; let c = cash, r = rev; const m = 1 + growth/100;
+      labels.forEach((_,i) => {
+        if (i===0) data.push(Math.round(c));
+        else { r *= m; c = Math.max(0, c - (exp - r)); data.push(Math.round(c)); }
+      });
+      forecastChart.data.labels = labels;
+      forecastChart.data.datasets[0].data = data;
+      forecastChart.update();
+    }
+
+    function renderCashflowMatrix(cash, rev, exp, growth) {
+      const tbody = document.getElementById('matrixTableBody');
+      const sym = getSymbol(appState.displayCurrency);
+      let open = cash, r = rev; const m = 1 + growth/100;
+      let rowO = `<tr class="bg-slate-900/40"><td class="p-3 font-semibold text-white">Opening</td>`;
+      let rowI = `<tr><td class="p-3 font-semibold text-emerald-400">Inflows</td>`;
+      let rowOut = `<tr><td class="p-3 font-semibold text-rose-400">Outflows</td>`;
+      let rowC = `<tr class="bg-indigo-950/40 font-bold"><td class="p-3 text-indigo-300">Closing</td>`;
+      for (let i=1;i<=12;i++) {
+        if (i>1) r *= m;
+        const close = Math.max(0, open + r - exp);
+        rowO += `<td class="p-3 text-right">${sym}${Math.round(open).toLocaleString()}</td>`;
+        rowI += `<td class="p-3 text-right text-emerald-400">+${sym}${Math.round(r).toLocaleString()}</td>`;
+        rowOut += `<td class="p-3 text-right text-rose-400">-${sym}${Math.round(exp).toLocaleString()}</td>`;
+        rowC += `<td class="p-3 text-right text-indigo-300">${sym}${Math.round(close).toLocaleString()}</td>`;
+        open = close;
+      }
+      tbody.innerHTML = rowO+'</tr>'+rowI+'</tr>'+rowOut+'</tr>'+rowC+'</tr>';
+    }
+
+    window.exportCashflowCSV = function() {
+      const ws = getActiveWorkspace();
+      const cash = convert(ws.cash, ws.cashCurrency||'USD', appState.displayCurrency);
+      const rev = (ws.revenues||[]).filter(i=>i.type!=='one-off').reduce((s,i)=>s+itemInDisplay(i),0);
+      const exp = (ws.expenses||[]).filter(i=>i.type!=='one-off').reduce((s,i)=>s+itemInDisplay(i),0);
+      const rows = [['Month','Opening','Revenue','Expenses','Closing']];
+      let open = cash, r = rev; const m = 1+(ws.growthRate||5)/100;
+      for (let i=1;i<=12;i++) {
+        if (i>1) r*=m;
+        const close = Math.max(0, open+r-exp);
+        rows.push([i, Math.round(open), Math.round(r), Math.round(exp), Math.round(close)]);
+        open = close;
+      }
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([rows.map(r=>r.join(',')).join('\n')], {type:'text/csv'}));
+      a.download = 'bootpulse-cashflow.csv'; a.click();
+    };
+
+    // ===================== SCENARIOS + INFLATION =====================
+    function renderScenarios(cash, rev, exp) {
+      const net = exp - rev;
+      document.getElementById('scenBaseRunway').textContent = net<=0 ? 'Profitable' : (cash/net).toFixed(1)+' mos';
+      const netH = (exp+4500) - rev;
+      document.getElementById('scenHireRunway').textContent = netH<=0 ? 'Profitable' : (cash/netH).toFixed(1)+' mos';
+      const netP = exp - rev*1.2;
+      document.getElementById('scenPriceRunway').textContent = netP<=0 ? 'Profitable' : (cash/netP).toFixed(1)+' mos';
+    }
+
+    window.runCustomScenario = function() {
+      const ws = getActiveWorkspace();
+      const addRev = convert(parseFloat(document.getElementById('customAddRev').value)||0, document.getElementById('customAddRevCurr').value, appState.displayCurrency);
+      const addExp = convert(parseFloat(document.getElementById('customAddExp').value)||0, document.getElementById('customAddExpCurr').value, appState.displayCurrency);
+      const oneOff = convert(parseFloat(document.getElementById('customOneOff').value)||0, document.getElementById('customOneOffCurr').value, appState.displayCurrency);
+      const inflPct = parseFloat(document.getElementById('customInflationPct').value)||0;
+
+      let rev = (ws.revenues||[]).filter(i=>i.type!=='one-off').reduce((s,i)=>s+itemInDisplay(i),0) + addRev;
+      let exp = (ws.expenses||[]).filter(i=>i.type!=='one-off').reduce((s,i)=>s+itemInDisplay(i),0) + addExp;
+      // apply inflation on expenses
+      exp = exp * (1 + inflPct/100);
+      const cash = Math.max(0, convert(ws.cash, ws.cashCurrency||'USD', appState.displayCurrency) - oneOff);
+      const net = exp - rev;
+      const runway = net<=0 ? '∞ (Profitable)' : (cash/net).toFixed(1) + ' months';
+
+      document.getElementById('customRunwayResult').textContent = runway;
+      document.getElementById('customScenarioResult').classList.remove('hidden');
+
+      // Margin / price advice
+      const adviceBox = document.getElementById('marginAdviceBox');
+      const adviceText = document.getElementById('marginAdviceText');
+      if (inflPct > 0 && rev > 0) {
+        // To keep same absolute margin (rev - exp), newRev needed = oldRev + extra cost from inflation
+        const extraCost = exp - (exp / (1+inflPct/100));
+        const neededRevIncreasePct = (extraCost / rev) * 100;
+        adviceText.innerHTML = `Ingredient / cost inflation of <strong>${inflPct}%</strong> adds roughly <strong>${getSymbol(appState.displayCurrency)}${Math.round(extraCost).toLocaleString()}</strong> to monthly expenses.<br>
+        To keep the same profit margin you would need to raise prices by approximately <strong>${neededRevIncreasePct.toFixed(1)}%</strong>.<br>
+        Example: if a dish currently sells for $20, new price ≈ $${(20 * (1+neededRevIncreasePct/100)).toFixed(2)}.`;
+        adviceBox.classList.remove('hidden');
+      } else {
+        adviceBox.classList.add('hidden');
+      }
+    };
+
+    window.runRestaurantInflationExample = function() {
+      document.getElementById('customInflationPct').value = 15;
+      document.getElementById('customAddRev').value = 0;
+      document.getElementById('customAddExp').value = 0;
+      document.getElementById('customOneOff').value = 0;
+      runCustomScenario();
+    };
+
+    // ===================== AUTH (demo OTP) =====================
+    window.openAuthModal = () => { document.getElementById('modalAuth').classList.remove('hidden'); resetToStep1(); };
+    window.closeAuthModal = () => { document.getElementById('modalAuth').classList.add('hidden'); clearInterval(otpTimerInterval); };
+    window.resetToStep1 = () => { clearInterval(otpTimerInterval); document.getElementById('formAuthStep2').classList.add('hidden'); document.getElementById('formAuthStep1').classList.remove('hidden'); };
+
+    window.handleRequestOTP = function(e) {
+      e.preventDefault();
+      const email = document.getElementById('inputAuthEmail').value.trim();
+      generatedOtpCode = Math.floor(100000 + Math.random()*900000).toString();
+      document.getElementById('formAuthStep1').classList.add('hidden');
+      document.getElementById('formAuthStep2').classList.remove('hidden');
+      document.getElementById('txtSentEmailDisplay').textContent = email;
+      document.getElementById('displayOtpCode').textContent = generatedOtpCode;
+      startOtpCountdown();
+    };
+    window.startOtpCountdown = function() {
+      clearInterval(otpTimerInterval); otpSecondsRemaining = 120;
+      const disp = document.getElementById('txtCountdownDisplay');
+      const btn = document.getElementById('btnResendOtp'); btn.disabled = true;
+      otpTimerInterval = setInterval(() => {
+        otpSecondsRemaining--;
+        disp.textContent = String(Math.floor(otpSecondsRemaining/60)).padStart(2,'0') + ':' + String(otpSecondsRemaining%60).padStart(2,'0');
+        if (otpSecondsRemaining <= 0) { clearInterval(otpTimerInterval); btn.disabled = false; }
+      }, 1000);
+    };
+    window.handleResendOTP = function() {
+      if (otpSecondsRemaining > 0) return;
+      generatedOtpCode = Math.floor(100000 + Math.random()*900000).toString();
+      document.getElementById('displayOtpCode').textContent = generatedOtpCode;
+      startOtpCountdown();
+    };
+    window.handleVerifyOTP = function(e) {
+      e.preventDefault();
+      const code = document.getElementById('inputOtpCode').value.trim();
+      if (code === generatedOtpCode || code === '123456') {
+        appState.currentUser = { email: document.getElementById('inputAuthEmail').value.trim(), verified: true };
+        saveState(); updateAuthHeaderUI(); closeAuthModal();
+        alert('Verified! Welcome ' + appState.currentUser.email);
+      } else alert('Invalid code. Use the big number or 123456.');
+    };
+    function updateAuthHeaderUI() {
+      const c = document.getElementById('authProfileContainer');
+      const g = document.getElementById('guestNoticeBanner');
+      if (appState.currentUser) {
+        if (g) g.classList.add('hidden');
+        c.innerHTML = `<div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-black text-white uppercase">${appState.currentUser.email.substring(0,2)}</div>
+          <span class="text-xs text-slate-300 hidden md:inline truncate max-w-[100px]">${appState.currentUser.email}</span>
+          <button onclick="appState.currentUser=null;saveState();updateAuthHeaderUI()" class="text-xs bg-slate-800 p-2 rounded-lg border border-slate-700"><i class="fa-solid fa-right-from-bracket"></i></button>
+        </div>`;
+      } else {
+        if (g) g.classList.remove('hidden');
+        c.innerHTML = `<button onclick="openAuthModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3.5 py-1.5 rounded-lg font-semibold flex items-center space-x-1.5"><i class="fa-solid fa-right-to-bracket"></i><span>Login</span></button>`;
+      }
+    }
+
+    // ===================== ITEM MODAL =====================
+    window.openAddItemModal = function(type) {
+      document.getElementById('inputItemType').value = type;
+      document.getElementById('itemModalTitle').textContent = type === 'revenue' ? 'Add Revenue' : 'Add Cost';
+      const cats = type === 'revenue' ? ['Subscription','Services','Food Sales','Other'] : ['Payroll','Ingredients','Software','Rent','Marketing','Utilities','Other'];
+      document.getElementById('selectItemCategory').innerHTML = cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+      document.getElementById('inputItemName').value = '';
+      document.getElementById('inputUnitCost').value = '';
+      document.getElementById('inputQty').value = '1';
+      document.getElementById('selectItemCurrency').value = appState.displayCurrency;
+      document.getElementById('selectItemRecurring').value = 'recurring';
+      updateItemPreview();
+      document.getElementById('modalItem').classList.remove('hidden');
+    };
+    window.closeItemModal = () => document.getElementById('modalItem').classList.add('hidden');
+
+    function updateItemPreview() {
+      const u = parseFloat(document.getElementById('inputUnitCost').value)||0;
+      const q = parseFloat(document.getElementById('inputQty').value)||0;
+      const curr = document.getElementById('selectItemCurrency').value;
+      const total = u * q;
+      const inDisp = convert(total, curr, appState.displayCurrency);
+      document.getElementById('previewItemTotal').textContent =
+        getSymbol(curr) + total.toLocaleString() + '  →  ' + getSymbol(appState.displayCurrency) + Math.round(inDisp).toLocaleString() + ' (display)';
+    }
+
+    window.handleSaveItem = function(e) {
+      e.preventDefault();
+      const type = document.getElementById('inputItemType').value;
+      const name = document.getElementById('inputItemName').value.trim();
+      const unitCost = parseFloat(document.getElementById('inputUnitCost').value)||0;
+      const qty = parseFloat(document.getElementById('inputQty').value)||0;
+      const currency = document.getElementById('selectItemCurrency').value;
+      const category = document.getElementById('selectItemCategory').value;
+      const itemType = document.getElementById('selectItemRecurring').value;
+      if (!name || unitCost < 0 || qty < 0) return;
+      const ws = getActiveWorkspace();
+      const item = { id: 'item_'+Date.now(), name, unitCost, qty, currency, category, type: itemType };
+      if (type === 'revenue') ws.revenues.push(item); else ws.expenses.push(item);
+      closeItemModal(); recalculateAll();
+    };
+
+    window.deleteItem = function(type, id) {
+      const ws = getActiveWorkspace();
+      if (type==='revenue') ws.revenues = ws.revenues.filter(i=>i.id!==id);
+      else ws.expenses = ws.expenses.filter(i=>i.id!==id);
+      recalculateAll();
+    };
+
+    // ===================== OTHER HELPERS =====================
+    window.changeCurrency = function(c) {
+      appState.displayCurrency = c;
+      recalculateAll();
+    };
+
+    window.promptEditOpeningCash = function() {
+      const ws = getActiveWorkspace();
+      const val = prompt(`Enter bank cash in ${ws.cashCurrency || 'USD'}:`, ws.cash);
+      if (val !== null && !isNaN(val)) { ws.cash = parseFloat(val); recalculateAll(); }
+    };
+
+    window.promptCreateWorkspace = function() {
+      const name = prompt('Workspace name:');
+      if (!name) return;
+      const id = 'ws_'+Date.now();
+      appState.workspaces[id] = {
+        id, name: name.trim(), cash: 50000, cashCurrency: 'USD', targetRunway:12, growthRate:5,
+        revenues: [{id:'r1',name:'Sales',unitCost:2000,qty:1,currency:'USD',category:'Services',type:'recurring'}],
+        expenses: [{id:'e1',name:'Core Costs',unitCost:3000,qty:1,currency:'USD',category:'Payroll',type:'recurring'}],
+        decisions: []
+      };
+      appState.activeWorkspaceId = id;
+      renderWorkspacesDropdown(); recalculateAll();
+    };
+
+    function renderWorkspacesDropdown() {
+      const sel = document.getElementById('selectWorkspace');
+      if (!sel) return;
+      sel.innerHTML = Object.values(appState.workspaces).map(w =>
+        `<option value="${w.id}" ${w.id===appState.activeWorkspaceId?'selected':''}>${escapeHtml(w.name)}</option>`
+      ).join('');
+    }
+    window.switchWorkspace = id => { if (appState.workspaces[id]) { appState.activeWorkspaceId = id; recalculateAll(); renderDecisions(); } };
+
+    window.switchView = function(v) {
+      ['dashboard','cashflow','scenarios','decisions','academy'].forEach(x => {
+        document.getElementById('view-'+x)?.classList.toggle('hidden', x!==v);
+        const nav = document.getElementById('nav-'+x);
+        if (nav) {
+          if (x===v) { nav.classList.add('text-indigo-400','bg-indigo-500/10','border','border-indigo-500/20'); nav.classList.remove('text-slate-400'); }
+          else { nav.classList.remove('text-indigo-400','bg-indigo-500/10','border','border-indigo-500/20'); nav.classList.add('text-slate-400'); }
+        }
+      });
+      if (v==='decisions') renderDecisions();
+    };
+
+    function renderDecisions() {
+      const ws = getActiveWorkspace();
+      const list = document.getElementById('decisionList');
+      if (!ws.decisions?.length) { list.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-8">No decisions yet</p>'; return; }
+      list.innerHTML = ws.decisions.map((d,i) => `
+        <div class="p-4 bg-slate-900/80 rounded-xl border border-slate-800 flex justify-between gap-4">
+          <div>
+            <p class="font-semibold text-white text-sm">${escapeHtml(d.title)}</p>
+            <p class="text-xs text-indigo-300 mt-1">${escapeHtml(d.impact||'')}</p>
+            <p class="text-xs text-slate-400 mt-1">${escapeHtml(d.notes||'')}</p>
+            <p class="text-[10px] text-slate-500 mt-2">${new Date(d.createdAt).toLocaleString()}</p>
+          </div>
+          <button onclick="getActiveWorkspace().decisions.splice(${i},1);renderDecisions();saveState()" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button>
+        </div>`).join('');
+    }
+    window.openDecisionModal = () => document.getElementById('modalDecision').classList.remove('hidden');
+    window.closeDecisionModal = () => document.getElementById('modalDecision').classList.add('hidden');
+    window.handleSaveDecision = function(e) {
+      e.preventDefault();
+      const ws = getActiveWorkspace();
+      if (!ws.decisions) ws.decisions = [];
+      ws.decisions.unshift({
+        title: document.getElementById('inputDecisionTitle').value.trim(),
+        impact: document.getElementById('inputDecisionImpact').value.trim(),
+        notes: document.getElementById('inputDecisionNotes').value.trim(),
+        createdAt: new Date().toISOString()
+      });
+      closeDecisionModal(); renderDecisions(); saveState();
+      document.getElementById('inputDecisionTitle').value = '';
+      document.getElementById('inputDecisionImpact').value = '';
+      document.getElementById('inputDecisionNotes').value = '';
+    };
+
+    // Single button: "Reset Demo" when data exists, "Restore Demo Data" when cleared
+    window.resetOrRestoreDemo = function() {
+      if (isAllDataEmpty()) {
+        // Restore demo
+        pushHistory('Before restoring demo data');
+        appState.workspaces = { ws_default: JSON.parse(JSON.stringify(defaultWorkspace)) };
+        appState.activeWorkspaceId = 'ws_default';
+        saveState();
+        renderWorkspacesDropdown();
+        recalculateAll();
+        renderDecisions();
+        alert('Demo data restored.');
+      } else {
+        // Reset current workspace to demo defaults
+        if (!confirm('Reset the CURRENT workspace back to the original demo numbers?\n\n(A snapshot will be saved so you can Undo.)')) return;
+        pushHistory('Before Reset Demo');
+        const id = appState.activeWorkspaceId;
+        appState.workspaces[id] = JSON.parse(JSON.stringify(defaultWorkspace));
+        appState.workspaces[id].id = id;
+        // keep the workspace name if user renamed it
+        const prev = getActiveWorkspace();
+        if (prev && prev.name && prev.name !== 'Main Workspace') {
+          // name already overwritten by default; re-apply if needed is optional
+        }
+        saveState();
+        recalculateAll();
+        renderDecisions();
+      }
+    };
+
+    // Clear EVERYTHING (all workspaces, all numbers, decisions)
+    window.clearAllData = function() {
+      if (!confirm('Clear ALL data in every workspace?\n\n• All revenues & expenses will be removed\n• Cash will be set to 0\n• Decision log will be emptied\n\nA snapshot is saved automatically — you can use "Undo Last Clear" afterwards.')) return;
+      pushHistory('Before Clear All Data');
+      // Keep workspace IDs/names but empty their content
+      Object.keys(appState.workspaces).forEach(id => {
+        const name = appState.workspaces[id].name || 'Workspace';
+        appState.workspaces[id] = JSON.parse(JSON.stringify(emptyWorkspace));
+        appState.workspaces[id].id = id;
+        appState.workspaces[id].name = name;
+      });
+      saveState();
+      recalculateAll();
+      renderDecisions();
+      updateHistoryButton();
+      alert('All data cleared. Use "Undo Last Clear" or "Restore Demo Data" if needed.');
+    };
+
+    function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  </script>
+</body>
+</html>
