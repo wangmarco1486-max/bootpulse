@@ -55,7 +55,7 @@
 
         <nav class="hidden lg:flex items-center space-x-1 text-xs font-medium">
           <button onclick="switchView('dashboard')" id="nav-dashboard" class="px-3 py-2 rounded-lg transition text-indigo-400 bg-indigo-500/10 border border-indigo-500/20"><i class="fa-solid fa-chart-line mr-1.5"></i>Dashboard</button>
-          <button onclick="switchView('cashflow')" id="nav-cashflow" class="px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"><i class="fa-solid fa-table-cells mr-1.5"></i>12M Cashflow</button>
+          <button onclick="switchView('cashflow')" id="nav-cashflow" class="px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"><i class="fa-solid fa-table-cells mr-1.5"></i>12 months cashflow</button>
           <button onclick="switchView('scenarios')" id="nav-scenarios" class="px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i>Scenarios</button>
           <button onclick="switchView('decisions')" id="nav-decisions" class="px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"><i class="fa-solid fa-clipboard-list mr-1.5"></i>Decision Log</button>
           <button onclick="switchView('academy')" id="nav-academy" class="px-3 py-2 rounded-lg text-slate-400 hover:text-amber-300 hover:bg-slate-800 transition"><i class="fa-solid fa-graduation-cap text-amber-400 mr-1.5"></i>Academy</button>
@@ -152,10 +152,10 @@
         </div>
         <div class="glass-card rounded-2xl p-5">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Financial Runway</span>
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Financial Runway <i class="fa-regular fa-circle-question metric-help-icon" title="How many months your current cash can cover your expected monthly shortfall."></i></span>
             <div class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20"><i class="fa-solid fa-hourglass-half text-sm"></i></div>
           </div>
-          <div class="mt-3 text-3xl font-extrabold text-indigo-300" id="valCardRunway">0.0</div>
+          <div class="mt-3 text-3xl font-extrabold text-indigo-300" id="valCardRunway">0.0</div><p class="metric-helper">Months your cash can last if income and costs stay similar.</p>
           <div id="badgeRunwayStatus" class="mt-2 text-[10px] font-bold px-2 py-0.5 rounded-full inline-block bg-slate-800 text-slate-300 border border-slate-700">Calculating…</div>
         </div>
       </div>
@@ -169,11 +169,12 @@
               <p class="text-xs text-slate-400 mt-0.5">Live FX · direct unit costs scale with sales at the current offer mix</p>
             </div>
             <div class="flex items-center space-x-3 bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-700/60 text-xs">
-              <span class="text-slate-300 font-medium">MoM Growth:</span>
+              <span class="text-slate-300 font-medium" title="MoM means month-over-month: how much revenue changes compared with the previous month.">MoM Growth <i class="fa-regular fa-circle-question metric-help-icon"></i>:</span>
               <input type="number" id="growthRateInput" value="5" min="-50" max="100" step="1" oninput="recalculateAll()" class="w-14 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-center font-bold text-white focus:outline-none">
               <span class="text-slate-400">%</span>
             </div>
           </div>
+          <p class="metric-helper growth-helper">Month-over-month growth compares this month with last month. The forecast repeats this rate each month.</p>
           <div class="relative w-full h-72 sm:h-80"><canvas id="cashForecastChart"></canvas></div>
         </div>
         <div class="glass-card rounded-2xl p-5 space-y-4 flex flex-col justify-between">
@@ -195,7 +196,7 @@
                 <p class="text-base font-bold text-amber-300 mt-1" id="valZeroCashDate">—</p>
               </div>
               <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
-                <span class="text-slate-400 text-[11px]">Target Runway (months)</span>
+                <span class="text-slate-400 text-[11px]" title="Your chosen months of cash buffer goal.">Target Runway (months) <i class="fa-regular fa-circle-question metric-help-icon"></i></span>
                 <div class="flex items-center justify-between mt-1">
                   <input type="number" id="targetRunwayGoal" value="12" min="1" max="36" oninput="recalculateAll()" class="w-20 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-white font-bold text-xs focus:outline-none">
                 </div>
@@ -228,12 +229,12 @@
       </div>
     </div>
 
-    <!-- 12M CASHFLOW -->
+    <!-- 12 MONTHS CASHFLOW -->
     <div id="view-cashflow" class="hidden space-y-6">
       <div class="glass-card rounded-2xl p-6">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 class="text-lg font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-table-cells text-indigo-400"></i><span>12-Month Cash Flow (Display Currency)</span></h2>
+            <h2 class="text-lg font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-table-cells text-indigo-400"></i><span>12 months cashflow (display currency)</span></h2>
             <p class="text-xs text-slate-400 mt-1">All values converted using current live rates</p>
           </div>
           <button onclick="exportCashflowCSV()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs px-3 py-2 rounded-xl font-semibold flex items-center space-x-2">
@@ -264,14 +265,11 @@
         <div class="pro-page-intro__side"><span class="eyebrow">YOUR WORKSPACE</span><strong id="scenarioWorkspaceName">Current workspace</strong><p>Figures follow the selected workspace and display currency.</p></div>
       </section>
       <section class="pro-module pro-module--wide"><div class="pro-module__heading"><div><span class="eyebrow">ALL PLANS</span><h2>Monthly break-even target</h2><p>Operating costs divided by contribution margin show the revenue needed to cover costs.</p></div></div><div id="breakEvenContent"></div></section>
-      <section class="pro-module pro-module--wide"><div class="pro-module__heading"><div><span class="eyebrow">QUICK WHAT-IF</span><h2>Adjust this month</h2><p>See how extra recurring sales, a recurring cost, or a one-time investment changes monthly cash flow.</p></div></div>
-        <div class="basic-scenario">
-          <div><label>Extra monthly income</label><input type="number" id="customAddRev" value="0" min="0" step="100"></div>
-          <div><label>Extra monthly cost</label><input type="number" id="customAddExp" value="0" min="0" step="100"></div>
-          <div><label>One-time cost</label><input type="number" id="customOneOff" value="0" min="0" step="100"></div>
-          <div class="scenario-actions"><button onclick="runCustomScenario()" class="pro-button">Calculate impact</button><span id="planStatus" class="plan-chip">FREE PLAN</span></div>
-        </div>
-        <div id="customScenarioResult" class="hidden forecast-verdict"><span class="eyebrow">SCENARIO RESULT</span><strong>Estimated runway: <span id="customRunwayResult"></span></strong><div id="marginAdviceBox" class="hidden"><p id="marginAdviceText"></p></div></div>
+      <section class="pro-module pro-module--wide"><div class="pro-module__heading"><div><span class="eyebrow">QUICK WHAT-IF</span><h2>Build a simple scenario</h2><p>Add named income or cost assumptions, with quantities, categories, currencies, and weekly, monthly, or one-time timing. Change or remove any line before calculating.</p></div></div>
+        <div class="scenario-assumption-actions"><button type="button" class="pro-button" onclick="addScenarioAssumption('revenue')">+ Add income</button><button type="button" class="pro-button pro-button--quiet" onclick="addScenarioAssumption('cost')">+ Add cost</button><span id="planStatus" class="plan-chip">FREE PLAN</span></div>
+        <div id="scenarioAssumptionsList" class="scenario-assumptions-list"></div>
+        <div class="scenario-calculate"><button onclick="runCustomScenario()" class="pro-button">Calculate impact</button></div>
+        <div id="customScenarioResult" class="hidden forecast-verdict"><span class="eyebrow">SCENARIO RESULT</span><strong>Estimated cash impact: <span id="customRunwayResult"></span></strong><div id="marginAdviceBox" class="hidden"><p id="marginAdviceText"></p></div></div>
       </section>
       <section class="pro-module pro-module--wide" data-pro-module="scenario"><div class="pro-module__heading"><div><span class="eyebrow">PRO · 12-MONTH FORECAST</span><h2>Model a hire or a second location</h2><p>Estimate the timing of added payroll, setup costs, and new-location sales. Monetary assumptions use the current display currency.</p></div></div>
         <div class="pro-module__content" id="forecastContent"><div class="scenario-form">
@@ -292,15 +290,18 @@
     <!-- PREMIUM ANALYTICS -->
     <div id="view-pro" class="hidden space-y-6">
       <section class="pro-page-intro">
-        <div><span class="eyebrow">BOOT PULSE · PRO</span><h1>Better signals for better decisions.</h1><p>Spot unusual cost movement, understand product and service contribution, test a 12-month plan, and compare key ratios with your chosen peers.</p></div>
+        <div><span class="eyebrow">BOOT PULSE · PRO</span><h1>Better signals for better decisions.</h1><p>Track financial changes, understand offer margins, monitor stock and suppliers, learn from reviews, and keep important renewals in sight.</p></div>
         <div class="pro-page-intro__side"><span class="eyebrow">CURRENT ACCESS</span><strong id="planStatusPro">Free plan</strong><p>This tier control previews product gating locally. It does not check billing status.</p></div>
       </section>
       <div class="pro-tier-callout"><div><span class="eyebrow">PLAN PREVIEW</span><p>Free keeps core cash tracking, cash flow, basic scenarios, and break-even. Pro modules are previewable on this device only. Tier switching does not process payment or verify a subscription.</p></div><div class="pro-topline"><span data-pro-status>FREE PLAN</span><button class="pro-button" onclick="setPlanTier(document.body.classList.contains('plan-pro') ? 'free' : 'pro')" id="tierPreviewButton">Enable Pro preview</button></div></div>
       <section class="pro-module pro-module--wide history-module"><div class="pro-module__heading"><div><span class="eyebrow">ALL PLANS · SAVED HISTORY</span><h2>Keep a record of your numbers</h2><p>Free users can see these historical snapshots. Save one as a baseline, then save again after your next period update.</p></div><button class="pro-button pro-button--quiet" onclick="saveComparisonSnapshot()">Save current snapshot</button></div><div id="freeHistoryContent"></div></section>
       <div class="pro-layout">
         <section class="pro-module" data-pro-module="guardian"><div class="pro-module__heading"><div><span class="eyebrow">A · FINANCIAL GUARDIAN</span><h2>Find changes worth a closer look</h2><p>Compare current costs and income with a snapshot you saved. Large cost jumps alongside flat sales become a review signal.</p></div></div><div class="pro-module__content" id="guardianContent"></div><div class="pro-lock-overlay"><div class="pro-lock-overlay__box"><span class="plan-chip">PRO FEATURE</span><h3>Catch cost movement early</h3><p>Save month-to-month snapshots to compare expenses with revenue.</p><button class="pro-button" onclick="setPlanTier('pro')">Preview this feature</button></div></div></section>
-        <section class="pro-module" data-pro-module="benchmark"><div class="pro-module__heading"><div><span class="eyebrow">D · PEER COMPARISON</span><h2>Know your ratios</h2><p>Compare labor share and contribution margin with peer figures you choose.</p></div></div><div class="pro-module__content"><div id="benchmarkContent"></div><div class="benchmark-controls"><label>Business type<select id="benchmarkIndustry" onchange="saveBenchmarkProfile()"><option>Professional services</option><option>Retail</option><option>Hospitality</option><option>Construction</option><option>Other small enterprise</option></select></label><label>Team size<select id="benchmarkSize" onchange="saveBenchmarkProfile()"><option>1–5</option><option>6–20</option><option>21–50</option><option>51+</option></select></label><label>Peer labor / revenue (%)<input type="number" id="benchmarkLabor" oninput="saveBenchmarkProfile()" min="0" max="100" step="0.1" placeholder="Enter peer ratio"></label><label>Peer contribution margin (%)<input type="number" id="benchmarkMargin" oninput="saveBenchmarkProfile()" min="0" max="100" step="0.1" placeholder="Enter peer ratio"></label></div></div><div class="pro-lock-overlay"><div class="pro-lock-overlay__box"><span class="plan-chip">PRO FEATURE</span><h3>Compare with your chosen peer group</h3><p>Enter ratios from a trusted source. This demo does not invent industry averages.</p><button class="pro-button" onclick="setPlanTier('pro')">Preview this feature</button></div></div></section>
+        <section class="pro-module" data-pro-module="inventory"><div class="pro-module__heading"><div><span class="eyebrow">E · STOCK CONTROL</span><h2>Inventory & waste watch</h2><p>See low stock and approaching expiry dates from the quantities you record.</p></div></div><div id="inventoryContent"></div><div class="pro-lock-overlay"><div class="pro-lock-overlay__box"><span class="plan-chip">PRO FEATURE</span><h3>Know what needs attention</h3><p>Preview manual stock and expiry tracking on this device.</p><button class="pro-button" onclick="setPlanTier('pro')">Preview this feature</button></div></div></section>
         <section class="pro-module pro-module--wide" data-pro-module="margin"><div class="pro-module__heading"><div><span class="eyebrow">B · OFFER MARGIN ANALYZER</span><h2>See which offers carry the business</h2><p>Compare per-unit contribution, margin, monthly sales volume, and optional labor time across any product or service.</p></div></div><div class="pro-module__content" id="marginContent"></div><div class="pro-lock-overlay"><div class="pro-lock-overlay__box"><span class="plan-chip">PRO FEATURE</span><h3>Find your high-contribution offers</h3><p>Add unit direct costs to income items, then preview the relative stars and review list.</p><button class="pro-button" onclick="setPlanTier('pro')">Preview this feature</button></div></div></section>
+        <section class="pro-module" data-pro-module="suppliers"><div class="pro-module__heading"><div><span class="eyebrow">F · PROCUREMENT</span><h2>Supplier price history</h2><p>Log invoice lines and compare manually entered unit prices over time.</p></div></div><div id="supplierContent"></div><div class="pro-lock-overlay"><div class="pro-lock-overlay__box"><span class="plan-chip">PRO FEATURE</span><h3>Spot vendor price changes</h3><p>Record invoices yourself to see price movements by supplier and item.</p><button class="pro-button" onclick="setPlanTier('pro')">Preview this feature</button></div></div></section>
+        <section class="pro-module" data-pro-module="reviews"><div class="pro-module__heading"><div><span class="eyebrow">G · CUSTOMER VOICE</span><h2>Reviews & recurring themes</h2><p>Collect review text and surface repeated topics with a transparent local keyword check.</p></div></div><div id="reviewContent"></div><div class="pro-lock-overlay"><div class="pro-lock-overlay__box"><span class="plan-chip">PRO FEATURE</span><h3>Listen for recurring feedback</h3><p>Preview manually entered reviews; live review and AI services are not connected.</p><button class="pro-button" onclick="setPlanTier('pro')">Preview this feature</button></div></div></section>
+        <section class="pro-module" data-pro-module="compliance"><div class="pro-module__heading"><div><span class="eyebrow">H · RENEWALS</span><h2>Compliance & expiry dates</h2><p>Track important inspection, insurance, registration, and license renewal dates.</p></div></div><div id="complianceContent"></div><div class="pro-lock-overlay"><div class="pro-lock-overlay__box"><span class="plan-chip">PRO FEATURE</span><h3>Keep renewals on your radar</h3><p>Due-date indicators are saved locally and appear when this app is open.</p><button class="pro-button" onclick="setPlanTier('pro')">Preview this feature</button></div></div></section>
       </div>
       <section class="pro-module pro-module--wide" data-pro-module="scenario"><div class="pro-module__heading"><div><span class="eyebrow">C · CASH-FLOW SIMULATOR</span><h2>One action, twelve months of consequences</h2><p>Run the same hire and second-location scenario from the Scenarios tab. The model uses workspace growth assumptions and saved seasonality history when available.</p></div><button class="pro-button pro-button--quiet" onclick="switchView('scenarios')">Open scenario inputs</button></div><div class="pro-note">Seasonality remains off until snapshots cover all 12 calendar months. The forecast is a planning estimate, not a guarantee.</div><div class="pro-lock-overlay"><div class="pro-lock-overlay__box"><span class="plan-chip">PRO FEATURE</span><h3>Test hires and expansion before committing</h3><p>Model added payroll, a new location, one-time costs, and revenue assumptions.</p><button class="pro-button" onclick="setPlanTier('pro')">Preview this feature</button></div></div></section>
     </div>
@@ -331,6 +332,7 @@
             <p class="text-xs text-slate-400 mt-0.5">Core concepts every small-business owner needs.</p>
           </div>
         </div>
+        <section class="daily-quote" aria-live="polite"><span class="eyebrow">TODAY’S FIELD NOTE · <span id="dailyQuoteDate"></span></span><blockquote id="dailyQuoteText">Small, steady decisions compound into room to grow.</blockquote><p>Original BootPulse encouragement · refreshed each calendar day</p></section>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
           <div class="p-4 bg-slate-900/90 rounded-xl border border-slate-800 space-y-2">
             <h3 class="text-sm font-bold text-indigo-300"><i class="fa-solid fa-fire text-rose-400 mr-2"></i>Burn Rate</h3>
@@ -418,13 +420,17 @@
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1" id="unitValueLabel">Unit price / cost</label>
-            <input type="number" id="inputUnitCost" required min="0" step="0.01" placeholder="12.50" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+            <label class="block text-xs font-semibold text-slate-300 mb-1" id="unitValueLabel">Amount per occurrence</label>
+            <input type="number" id="inputUnitCost" required min="0" step="0.01" placeholder="200.00" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1">Quantity / month</label>
+            <label class="block text-xs font-semibold text-slate-300 mb-1" id="quantityLabel">Quantity per month</label>
             <input type="number" id="inputQty" required min="0" step="0.01" value="1" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
           </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Frequency</label>
+          <select id="selectItemFrequency" onchange="updateItemFrequencyLabel()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none"><option value="monthly">Monthly</option><option value="weekly">Weekly</option></select>
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1">Currency</label>
@@ -443,15 +449,15 @@
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1">Type</label>
-          <select id="selectItemRecurring" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
-            <option value="recurring">Recurring (every month)</option>
+          <select id="selectItemRecurring" onchange="updateItemPreview()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+            <option value="recurring">Recurring</option>
             <option value="one-off">One-off</option>
           </select>
         </div>
         <div class="p-3 bg-slate-800/60 rounded-lg text-xs text-slate-300">
           Total this month: <span id="previewItemTotal" class="font-bold text-white">—</span>
         </div>
-        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-sm">Save Item</button>
+        <button id="itemSubmitButton" type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-sm">Save Item</button>
       </form>
     </div>
   </div>
@@ -564,7 +570,7 @@
       workspaces: { ws_default: JSON.parse(JSON.stringify(defaultWorkspace)) }
     };
 
-    let otpTimerInterval = null, otpSecondsRemaining = 120, generatedOtpCode = null, forecastChart = null;
+    let otpTimerInterval = null, otpSecondsRemaining = 120, generatedOtpCode = null, forecastChart = null, editingItemId = null;
 
     // ===================== PERSISTENCE + HISTORY =====================
     function snapshotState() {
@@ -692,6 +698,7 @@
         document.getElementById(id)?.addEventListener('input', updateItemPreview);
       });
       document.getElementById('selectItemCurrency')?.addEventListener('change', updateItemPreview);
+      document.getElementById('selectItemFrequency')?.addEventListener('change', updateItemPreview);
     };
 
     function populateCurrencySelects() {
@@ -709,7 +716,8 @@
     }
 
     function itemMonthlyAmount(item) {
-      return (parseFloat(item.unitCost) || 0) * (parseFloat(item.qty) || 0);
+      const amount = (parseFloat(item.unitCost) || 0) * (parseFloat(item.qty) || 0);
+      return item.type !== 'one-off' && item.frequency === 'weekly' ? amount * 52 / 12 : amount;
     }
 
     function itemInDisplay(item) {
@@ -717,7 +725,9 @@
     }
 
     function directCostInDisplay(item) {
-      return convert((parseFloat(item.directCost) || 0) * (parseFloat(item.qty) || 0), item.currency || 'USD', appState.displayCurrency);
+      const amount = (parseFloat(item.directCost) || 0) * (parseFloat(item.qty) || 0);
+      const monthlyAmount = item.type !== 'one-off' && item.frequency === 'weekly' ? amount * 52 / 12 : amount;
+      return convert(monthlyAmount, item.currency || 'USD', appState.displayCurrency);
     }
 
     function syncWorkspaceInputs() {
@@ -741,9 +751,9 @@
       const revItems = ws.revenues || [];
       const expItems = ws.expenses || [];
 
-      const totalRevDisp = revItems.reduce((s,i) => s + itemInDisplay(i), 0);
-      const totalOperatingExpDisp = expItems.reduce((s,i) => s + itemInDisplay(i), 0);
-      const totalDirectCostDisp = revItems.reduce((s,i) => s + directCostInDisplay(i), 0);
+      const totalRevDisp = revItems.filter(i => i.type !== 'one-off').reduce((s,i) => s + itemInDisplay(i), 0);
+      const totalOperatingExpDisp = expItems.filter(i => i.type !== 'one-off').reduce((s,i) => s + itemInDisplay(i), 0);
+      const totalDirectCostDisp = revItems.filter(i => i.type !== 'one-off').reduce((s,i) => s + directCostInDisplay(i), 0);
       const totalExpDisp = totalOperatingExpDisp + totalDirectCostDisp;
 
       // Recurring direct costs are variable outflows on recurring income items.
@@ -811,21 +821,13 @@
       box.innerHTML = ws.revenues.map(item => {
         const totalDisp = itemInDisplay(item);
         const orig = getSymbol(item.currency) + itemMonthlyAmount(item).toLocaleString();
-        return `<div class="flex items-center justify-between p-2.5 bg-slate-900/80 rounded-xl border border-slate-800 text-xs">
-          <div class="flex items-center space-x-2.5">
-            <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center"><i class="fa-solid fa-arrow-up text-[10px]"></i></div>
-            <div>
-              <p class="font-semibold text-white">${escapeHtml(item.name)}</p>
-              <span class="text-[10px] text-slate-400">${item.unitCost} × ${item.qty} ${item.currency} • ${item.category} • ${item.type}</span>
-            </div>
-          </div>
-          <div class="flex items-center space-x-3">
-            <div class="text-right">
-              <div class="font-extrabold text-emerald-400">+${sym}${Math.round(totalDisp).toLocaleString()}</div>
-              <div class="text-[10px] text-slate-500">${orig}</div>
-            </div>
-            <button onclick="deleteItem('revenue','${item.id}')" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button>
-          </div>
+        const cadence = item.type === 'one-off' ? 'one time' : item.frequency === 'weekly' ? 'per week' : 'per month';
+        const period = item.frequency === 'weekly' && item.type !== 'one-off' ? ` · about ${sym}${Math.round(totalDisp).toLocaleString()} / month` : '';
+        return `<div class="finance-item-row">
+          <div class="finance-item-row__icon finance-item-row__icon--income"><i class="fa-solid fa-arrow-up text-[10px]"></i></div>
+          <div class="finance-item-row__detail"><p class="font-semibold text-white">${escapeHtml(item.name)}</p><span class="text-[10px] text-slate-400">${getSymbol(item.currency || 'USD')}${Number(item.unitCost).toLocaleString()} × ${Number(item.qty).toLocaleString()} ${cadence} • ${escapeHtml(item.category || 'Other')} • ${item.type}</span>${period ? `<small>${period}</small>` : ''}</div>
+          <div class="finance-item-row__amount"><div class="font-extrabold text-emerald-400">+${sym}${Math.round(totalDisp).toLocaleString()}</div><div class="text-[10px] text-slate-500">${orig} ${item.type==='one-off'?'one time':'equivalent / month'}</div></div>
+          <div class="finance-item-row__actions"><button title="Edit income" aria-label="Edit income ${escapeHtml(item.name)}" onclick="openEditItemModal('revenue','${item.id}')" class="item-action-button"><i class="fa-solid fa-pen"></i></button><button title="Delete income" aria-label="Delete income ${escapeHtml(item.name)}" onclick="deleteItem('revenue','${item.id}')" class="item-action-button item-action-button--delete"><i class="fa-solid fa-trash-can"></i></button></div>
         </div>`;
       }).join('');
     }
@@ -837,22 +839,14 @@
       if (!ws.expenses.length) { box.innerHTML = '<p class="text-xs text-slate-500 italic p-3 text-center">No expenses yet</p>'; return; }
       box.innerHTML = ws.expenses.map(item => {
         const totalDisp = itemInDisplay(item);
-        const orig = getSymbol(item.currency) + itemMonthlyAmount(item).toLocaleString();
-        return `<div class="flex items-center justify-between p-2.5 bg-slate-900/80 rounded-xl border border-slate-800 text-xs">
-          <div class="flex items-center space-x-2.5">
-            <div class="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center"><i class="fa-solid fa-arrow-down text-[10px]"></i></div>
-            <div>
-              <p class="font-semibold text-white">${escapeHtml(item.name)}</p>
-              <span class="text-[10px] text-slate-400">${item.unitCost} × ${item.qty} ${item.currency} • ${item.category} • ${item.type}</span>
-            </div>
-          </div>
-          <div class="flex items-center space-x-3">
-            <div class="text-right">
-              <div class="font-extrabold text-rose-400">-${sym}${Math.round(totalDisp).toLocaleString()}</div>
-              <div class="text-[10px] text-slate-500">${orig}</div>
-            </div>
-            <button onclick="deleteItem('expense','${item.id}')" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button>
-          </div>
+        const orig = getSymbol(item.currency || 'USD') + itemMonthlyAmount(item).toLocaleString();
+        const cadence = item.type === 'one-off' ? 'one time' : item.frequency === 'weekly' ? 'per week' : 'per month';
+        const period = item.frequency === 'weekly' && item.type !== 'one-off' ? ` · about ${sym}${Math.round(totalDisp).toLocaleString()} / month` : '';
+        return `<div class="finance-item-row">
+          <div class="finance-item-row__icon finance-item-row__icon--cost"><i class="fa-solid fa-arrow-down text-[10px]"></i></div>
+          <div class="finance-item-row__detail"><p class="font-semibold text-white">${escapeHtml(item.name)}</p><span class="text-[10px] text-slate-400">${getSymbol(item.currency || 'USD')}${Number(item.unitCost).toLocaleString()} × ${Number(item.qty).toLocaleString()} ${cadence} • ${escapeHtml(item.category || 'Other')} • ${item.type}</span>${period ? `<small>${period}</small>` : ''}</div>
+          <div class="finance-item-row__amount"><div class="font-extrabold text-rose-400">-${sym}${Math.round(totalDisp).toLocaleString()}</div><div class="text-[10px] text-slate-500">${orig} ${item.type==='one-off'?'one time':'equivalent / month'}</div></div>
+          <div class="finance-item-row__actions"><button title="Edit cost" aria-label="Edit cost ${escapeHtml(item.name)}" onclick="openEditItemModal('expense','${item.id}')" class="item-action-button"><i class="fa-solid fa-pen"></i></button><button title="Delete cost" aria-label="Delete cost ${escapeHtml(item.name)}" onclick="deleteItem('expense','${item.id}')" class="item-action-button item-action-button--delete"><i class="fa-solid fa-trash-can"></i></button></div>
         </div>`;
       }).join('');
     }
@@ -989,9 +983,10 @@
 
     // ===================== ITEM MODAL =====================
     window.openAddItemModal = function(type) {
+      editingItemId = null;
       document.getElementById('inputItemType').value = type;
       document.getElementById('itemModalTitle').textContent = type === 'revenue' ? 'Add Income / Offer' : 'Add Cost';
-      const unitLabel = document.getElementById('unitValueLabel'); if (unitLabel) unitLabel.textContent = type === 'revenue' ? 'Price per unit' : 'Cost per unit';
+      const unitLabel = document.getElementById('unitValueLabel'); if (unitLabel) unitLabel.textContent = 'Amount per occurrence';
       const cats = type === 'revenue' ? ['Product Sales','Services','Subscription','Other'] : ['Payroll','Direct costs','Software','Rent','Marketing','Utilities','Other'];
       document.getElementById('selectItemCategory').innerHTML = cats.map(c=>`<option value="${c}">${c}</option>`).join('');
       document.getElementById('inputItemName').value = '';
@@ -1000,10 +995,36 @@
       if (document.getElementById('inputLaborHours')) document.getElementById('inputLaborHours').value = '';
       document.getElementById('inputUnitCost').value = '';
       document.getElementById('inputQty').value = '1';
+      document.getElementById('selectItemFrequency').value = 'monthly';
       document.getElementById('selectItemCurrency').value = appState.displayCurrency;
       document.getElementById('selectItemRecurring').value = 'recurring';
-      updateItemPreview();
+      document.getElementById('itemSubmitButton').textContent = 'Save Item';
+      updateItemFrequencyLabel(); updateItemPreview();
       document.getElementById('modalItem').classList.remove('hidden');
+    };
+    window.openEditItemModal = function(type,id) {
+      const ws=getActiveWorkspace(), rows=type==='revenue'?ws.revenues:ws.expenses, item=rows.find(row=>row.id===id);
+      if(!item)return;
+      window.openAddItemModal(type); editingItemId=id;
+      document.getElementById('itemModalTitle').textContent=type==='revenue'?'Edit Income / Offer':'Edit Cost';
+      document.getElementById('itemSubmitButton').textContent='Save Changes';
+      document.getElementById('inputItemName').value=item.name||'';
+      document.getElementById('inputUnitCost').value=item.unitCost??0;
+      document.getElementById('inputQty').value=item.qty??1;
+      document.getElementById('selectItemCurrency').value=item.currency||'USD';
+      document.getElementById('selectItemFrequency').value=item.frequency==='weekly'?'weekly':'monthly';
+      document.getElementById('selectItemRecurring').value=item.type==='one-off'?'one-off':'recurring';
+      const category=document.getElementById('selectItemCategory');
+      if(!Array.from(category.options).some(option=>option.value===item.category)){category.add(new Option(item.category||'Other',item.category||'Other'));}
+      category.value=item.category||'Other';
+      if(document.getElementById('inputDirectCost'))document.getElementById('inputDirectCost').value=item.directCost??'';
+      if(document.getElementById('inputLaborHours'))document.getElementById('inputLaborHours').value=item.laborHoursPerUnit??'';
+      updateItemFrequencyLabel();updateItemPreview();
+    };
+    window.updateItemFrequencyLabel = function() {
+      const frequency=document.getElementById('selectItemFrequency')?.value||'monthly';
+      const label=document.getElementById('quantityLabel');
+      if(label)label.textContent=frequency==='weekly'?'Occurrences per week':'Quantity per month';
     };
     window.closeItemModal = () => document.getElementById('modalItem').classList.add('hidden');
 
@@ -1011,10 +1032,11 @@
       const u = parseFloat(document.getElementById('inputUnitCost').value)||0;
       const q = parseFloat(document.getElementById('inputQty').value)||0;
       const curr = document.getElementById('selectItemCurrency').value;
-      const total = u * q;
+      const frequency=document.getElementById('selectItemFrequency')?.value||'monthly';
+      const itemType=document.getElementById('selectItemRecurring').value;
+      const total = u * q * (itemType!=='one-off'&&frequency==='weekly'?52/12:1);
       const inDisp = convert(total, curr, appState.displayCurrency);
-      document.getElementById('previewItemTotal').textContent =
-        getSymbol(curr) + total.toLocaleString() + '  →  ' + getSymbol(appState.displayCurrency) + Math.round(inDisp).toLocaleString() + ' (display)';
+      document.getElementById('previewItemTotal').textContent = getSymbol(curr) + (u*q).toLocaleString() + (frequency==='weekly'&&itemType!=='one-off'?' / week':'') + '  →  ' + getSymbol(appState.displayCurrency) + Math.round(inDisp).toLocaleString() + (itemType==='one-off'?' one time':' / month equivalent');
     }
 
     window.handleSaveItem = function(e) {
@@ -1026,14 +1048,17 @@
       const currency = document.getElementById('selectItemCurrency').value;
       const category = document.getElementById('selectItemCategory').value;
       const itemType = document.getElementById('selectItemRecurring').value;
+      const frequency=document.getElementById('selectItemFrequency').value;
       if (!name || unitCost < 0 || qty < 0) return;
       const ws = getActiveWorkspace();
       const directCostRaw = document.getElementById('inputDirectCost')?.value?.trim() ?? '';
       const directCost = type === 'revenue' && directCostRaw !== '' ? Number(directCostRaw) : null;
       if (directCost !== null && (!Number.isFinite(directCost) || directCost < 0)) return;
-      const item = { id: 'item_'+Date.now(), name, unitCost, qty, currency, category, type: itemType, directCost, laborHoursPerUnit: type === 'revenue' ? (parseFloat(document.getElementById('inputLaborHours')?.value) || 0) : 0 };
-      if (type === 'revenue') ws.revenues.push(item); else ws.expenses.push(item);
-      closeItemModal(); recalculateAll();
+      const next = { name, unitCost, qty, currency, category, type: itemType, frequency, directCost, laborHoursPerUnit: type === 'revenue' ? (parseFloat(document.getElementById('inputLaborHours')?.value) || 0) : 0 };
+      const rows=type==='revenue'?ws.revenues:ws.expenses;
+      if(editingItemId){const current=rows.find(item=>item.id===editingItemId);if(current)Object.assign(current,next);}
+      else rows.push({id:'item_'+Date.now(),...next});
+      closeItemModal(); editingItemId=null; recalculateAll();
     };
 
     window.deleteItem = function(type, id) {
