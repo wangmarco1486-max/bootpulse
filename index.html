@@ -488,22 +488,35 @@
   <script>
     // ===================== LIVE RATES =====================
     // Fallback rates (approx, will be overwritten by live fetch)
-    let fxRates = { USD:1, EUR:0.89, GBP:0.75, HKD:7.85, SGD:1.28, CNY:6.69, JPY:158, AUD:1.44, CAD:1.41 };
+    const FALLBACK_FX_RATES = { USD:1, EUR:0.89, GBP:0.75, HKD:7.85, SGD:1.28, CNY:6.69, JPY:158, AUD:1.44, CAD:1.41 };
+    let fxRates = { ...FALLBACK_FX_RATES };
     let ratesLoaded = false;
+
+    function normalizeFxRates(data) {
+      const rates = data?.rates;
+      if (!rates || typeof rates !== 'object') return false;
+      const base = String(data.base || 'USD').toUpperCase();
+      const numeric = Object.fromEntries(Object.entries(rates).map(([code,value]) => [code.toUpperCase(), Number(value)]).filter(([code,value]) => code.length === 3 && Number.isFinite(value) && value > 0));
+      const usdPerBase = base === 'USD' ? 1 : numeric.USD;
+      if (!Number.isFinite(usdPerBase) || usdPerBase <= 0) return false;
+      const normalized = { USD:1 };
+      Object.entries(numeric).forEach(([code,rate]) => { normalized[code] = rate / usdPerBase; });
+      fxRates = { ...FALLBACK_FX_RATES, ...normalized, USD:1 };
+      return true;
+    }
 
     async function fetchLiveRates() {
       const icon = document.getElementById('rateRefreshIcon');
       if (icon) icon.classList.add('fa-spin');
       try {
         const res = await fetch('https://cdn.moneyconvert.net/api/latest.json');
+        if (!res.ok) throw new Error(`Exchange-rate request failed (${res.status})`);
         const data = await res.json();
-        if (data && data.rates) {
-          fxRates = { USD: 1, ...data.rates };
-          ratesLoaded = true;
-          document.getElementById('rateStatusText').textContent = 'Live rates loaded (base USD)';
-          document.getElementById('rateTimestamp').textContent = 'Updated ' + new Date().toLocaleTimeString();
-          recalculateAll();
-        }
+        if (!normalizeFxRates(data)) throw new Error('Exchange-rate response could not be normalized to USD.');
+        ratesLoaded = true;
+        document.getElementById('rateStatusText').textContent = 'Live rates loaded (normalized to USD base)';
+        document.getElementById('rateTimestamp').textContent = 'Updated ' + new Date().toLocaleTimeString();
+        recalculateAll();
       } catch (e) {
         document.getElementById('rateStatusText').textContent = 'Using fallback rates (offline)';
         console.warn('FX fetch failed, using fallback', e);
@@ -512,12 +525,13 @@
     }
 
     function convert(amount, fromCurr, toCurr) {
-      if (!fromCurr || !toCurr || fromCurr === toCurr) return amount;
-      const fromRate = fxRates[fromCurr] || 1; // units of fromCurr per 1 USD
-      const toRate = fxRates[toCurr] || 1;
-      // amount in fromCurr → USD → toCurr
-      const inUSD = amount / fromRate;
-      return inUSD * toRate;
+      const value = Number(amount);
+      if (!Number.isFinite(value)) return 0;
+      if (!fromCurr || !toCurr || fromCurr === toCurr) return value;
+      const fromRate = Number(fxRates[fromCurr]); // units of source currency per USD
+      const toRate = Number(fxRates[toCurr]); // units of display currency per USD
+      if (!Number.isFinite(fromRate) || fromRate <= 0 || !Number.isFinite(toRate) || toRate <= 0) return value;
+      return (value / fromRate) * toRate;
     }
 
     function getSymbol(c) {
@@ -983,6 +997,7 @@
 
     // ===================== ITEM MODAL =====================
     window.openAddItemModal = function(type) {
+      window.scenarioItemMode = false;
       editingItemId = null;
       document.getElementById('inputItemType').value = type;
       document.getElementById('itemModalTitle').textContent = type === 'revenue' ? 'Add Income / Offer' : 'Add Cost';
@@ -1026,7 +1041,7 @@
       const label=document.getElementById('quantityLabel');
       if(label)label.textContent=frequency==='weekly'?'Occurrences per week':'Quantity per month';
     };
-    window.closeItemModal = () => document.getElementById('modalItem').classList.add('hidden');
+    window.closeItemModal = () => { window.scenarioItemMode = false; document.getElementById('modalItem').classList.add('hidden'); };
 
     function updateItemPreview() {
       const u = parseFloat(document.getElementById('inputUnitCost').value)||0;
@@ -1055,6 +1070,12 @@
       const directCost = type === 'revenue' && directCostRaw !== '' ? Number(directCostRaw) : null;
       if (directCost !== null && (!Number.isFinite(directCost) || directCost < 0)) return;
       const next = { name, unitCost, qty, currency, category, type: itemType, frequency, directCost, laborHoursPerUnit: type === 'revenue' ? (parseFloat(document.getElementById('inputLaborHours')?.value) || 0) : 0 };
+      if (window.scenarioItemMode) {
+        window.scenarioItemMode = false;
+        closeItemModal();
+        window.addScenarioAssumptionFromForm?.({ kind: type === 'expense' ? 'cost' : 'revenue', name, category, amount: unitCost, quantity: qty, currency, frequency: itemType === 'one-off' ? 'once' : frequency, directCost, laborHoursPerUnit: next.laborHoursPerUnit });
+        return;
+      }
       const rows=type==='revenue'?ws.revenues:ws.expenses;
       if(editingItemId){const current=rows.find(item=>item.id===editingItemId);if(current)Object.assign(current,next);}
       else rows.push({id:'item_'+Date.now(),...next});
@@ -1070,21 +1091,32 @@
 
     // ===================== OTHER HELPERS =====================
     window.changeCurrency = function(c) {
-      const previous = appState.displayCurrency;
-      if (previous !== c) {
-        ['customAddRev','customAddExp','customOneOff','scenarioHourlyRate','scenarioLocationCost','scenarioOtherCost','scenarioLocationSetup'].forEach(id => {
+      const nextCurrency = CURRENCIES.includes(c) ? c : 'USD';
+      const previous = appState.displayCurrency || 'USD';
+      if (previous !== nextCurrency) {
+        // These scenario controls are amounts denominated in the selected display currency.
+        ['scenarioHourlyRate','scenarioLocationCost','scenarioOtherCost','scenarioLocationSetup'].forEach(id => {
           const input = document.getElementById(id);
-          if (input && input.value !== '' && Number.isFinite(Number(input.value))) input.value = convert(Number(input.value), previous, c).toFixed(2);
+          if (input && input.value !== '' && Number.isFinite(Number(input.value))) input.value = convert(Number(input.value), previous, nextCurrency).toFixed(2);
         });
       }
-      appState.displayCurrency = c;
+      appState.displayCurrency = nextCurrency;
+      const selector = document.getElementById('selectCurrency');
+      if (selector) selector.value = nextCurrency;
       recalculateAll();
+      window.renderProExperience?.();
     };
 
     window.promptEditOpeningCash = function() {
       const ws = getActiveWorkspace();
-      const val = prompt(`Enter bank cash in ${ws.cashCurrency || 'USD'}:`, ws.cash);
-      if (val !== null && !isNaN(val)) { ws.cash = parseFloat(val); recalculateAll(); }
+      const currency = appState.displayCurrency || 'USD';
+      const currentDisplayValue = convert(ws.cash || 0, ws.cashCurrency || 'USD', currency);
+      const val = prompt(`Enter bank cash in ${currency}:`, currentDisplayValue.toFixed(2));
+      if (val !== null && val.trim() !== '' && Number.isFinite(Number(val)) && Number(val) >= 0) {
+        ws.cash = Number(val);
+        ws.cashCurrency = currency;
+        recalculateAll();
+      }
     };
 
     window.promptCreateWorkspace = function() {

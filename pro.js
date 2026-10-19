@@ -145,14 +145,27 @@
 
   function getScenarioItems() { return listFor('whatIfItems'); }
   function currencyOptions(selected) { return currencies.map(code => `<option value="${code}" ${code === selected ? 'selected' : ''}>${code}</option>`).join(''); }
-  window.addScenarioAssumption = kind => {
-    getScenarioItems().push({ id: uid('whatif'), kind: kind === 'cost' ? 'cost' : 'revenue', name: kind === 'cost' ? 'New cost' : 'New income', category: kind === 'cost' ? 'Other cost' : 'Other income', amount: 0, quantity: 1, frequency: 'monthly', currency: appState.displayCurrency, directCost: null });
-    saveState(); renderScenarioAssumptions();
+  window.openScenarioItemModal = kind => {
+    const type = kind === 'cost' ? 'expense' : 'revenue';
+    window.openAddItemModal(type);
+    window.scenarioItemMode = true;
+    document.getElementById('itemModalTitle').textContent = type === 'revenue' ? 'Add Income to Scenario' : 'Add Cost to Scenario';
+    document.getElementById('itemSubmitButton').textContent = 'Add to Scenario';
+    const preview = document.getElementById('previewItemTotal');
+    if (preview) preview.setAttribute('aria-live','polite');
+  };
+  window.addScenarioAssumption = kind => window.openScenarioItemModal(kind);
+  window.addScenarioAssumptionFromForm = item => {
+    if (!item || !item.name || !Number.isFinite(Number(item.amount)) || !Number.isFinite(Number(item.quantity))) return;
+    getScenarioItems().push({ id: uid('whatif'), kind: item.kind === 'cost' ? 'cost' : 'revenue', name: item.name, category: item.category || 'Other', amount: Number(item.amount), quantity: Number(item.quantity), frequency: ['weekly','once'].includes(item.frequency) ? item.frequency : 'monthly', currency: currencies.includes(item.currency) ? item.currency : appState.displayCurrency, directCost: item.directCost === null || item.directCost === '' ? null : Number(item.directCost), laborHoursPerUnit: Number(item.laborHoursPerUnit) || 0 });
+    saveState();
+    renderScenarioAssumptions();
+    window.runCustomScenario();
   };
   window.updateScenarioAssumption = (id, field, value) => {
     const item = getScenarioItems().find(row => row.id === id);
-    if (!item || !['name','category','kind','amount','quantity','frequency','currency','directCost'].includes(field)) return;
-    if (['amount','quantity','directCost'].includes(field)) {
+    if (!item || !['name','category','kind','amount','quantity','frequency','currency','directCost','laborHoursPerUnit'].includes(field)) return;
+    if (['amount','quantity','directCost','laborHoursPerUnit'].includes(field)) {
       if (value === '' && field === 'directCost') item.directCost = null;
       else if (Number.isFinite(Number(value))) item[field] = Number(value);
     } else if (field === 'kind') item.kind = value === 'cost' ? 'cost' : 'revenue';
@@ -168,7 +181,7 @@
     if (!target) return;
     const rows = getScenarioItems();
     if (!rows.length) { target.innerHTML = '<p class="scenario-empty">Add an income or cost line to try a change. For example: $200 twice a week, or a one-time setup purchase.</p>'; return; }
-    target.innerHTML = rows.map(row => `<article class="scenario-assumption-row"><div class="scenario-assumption-row__top"><span class="eyebrow">${row.kind === 'cost' ? 'COST ASSUMPTION' : 'INCOME ASSUMPTION'}</span><button type="button" class="inline-text-button" onclick="removeScenarioAssumption('${safeText(row.id)}')">Remove</button></div><div class="scenario-assumption-fields"><label>Name<input value="${safeText(row.name)}" oninput="updateScenarioAssumption('${safeText(row.id)}','name',this.value)"></label><label>Category<input value="${safeText(row.category)}" oninput="updateScenarioAssumption('${safeText(row.id)}','category',this.value)"></label><label>Amount each<input type="number" min="0" step="0.01" value="${Number(row.amount)||0}" oninput="updateScenarioAssumption('${safeText(row.id)}','amount',this.value)"></label><label>Times in period<input type="number" min="0" step="0.1" value="${Number(row.quantity)||0}" oninput="updateScenarioAssumption('${safeText(row.id)}','quantity',this.value)"></label><label>Timing<select onchange="updateScenarioAssumption('${safeText(row.id)}','frequency',this.value)"><option value="monthly" ${row.frequency==='monthly'?'selected':''}>Each month</option><option value="weekly" ${row.frequency==='weekly'?'selected':''}>Each week</option><option value="once" ${row.frequency==='once'?'selected':''}>One time</option></select></label><label>Currency<select onchange="updateScenarioAssumption('${safeText(row.id)}','currency',this.value)">${currencyOptions(row.currency || appState.displayCurrency)}</select></label>${row.kind==='revenue' ? `<label>Direct cost each (optional)<input type="number" min="0" step="0.01" value="${row.directCost ?? ''}" placeholder="0.00" oninput="updateScenarioAssumption('${safeText(row.id)}','directCost',this.value)"></label>` : ''}</div></article>`).join('');
+    target.innerHTML = rows.map(row => `<article class="scenario-assumption-row"><div class="scenario-assumption-row__top"><span class="eyebrow">${row.kind === 'cost' ? 'COST ASSUMPTION' : 'INCOME ASSUMPTION'}</span><button type="button" class="inline-text-button" onclick="removeScenarioAssumption('${safeText(row.id)}')">Remove</button></div><div class="scenario-assumption-fields"><label>Name<input value="${safeText(row.name)}" oninput="updateScenarioAssumption('${safeText(row.id)}','name',this.value)"></label><label>Category<input value="${safeText(row.category)}" oninput="updateScenarioAssumption('${safeText(row.id)}','category',this.value)"></label><label>Amount each<input type="number" min="0" step="0.01" value="${Number(row.amount)||0}" oninput="updateScenarioAssumption('${safeText(row.id)}','amount',this.value)"></label><label>Times in period<input type="number" min="0" step="0.1" value="${Number(row.quantity)||0}" oninput="updateScenarioAssumption('${safeText(row.id)}','quantity',this.value)"></label><label>Timing<select onchange="updateScenarioAssumption('${safeText(row.id)}','frequency',this.value)"><option value="monthly" ${row.frequency==='monthly'?'selected':''}>Each month</option><option value="weekly" ${row.frequency==='weekly'?'selected':''}>Each week</option><option value="once" ${row.frequency==='once'?'selected':''}>One time</option></select></label><label>Currency<select onchange="updateScenarioAssumption('${safeText(row.id)}','currency',this.value)">${currencyOptions(row.currency || appState.displayCurrency)}</select></label>${row.kind==='revenue' ? `<label>Direct cost each (optional)<input type="number" min="0" step="0.01" value="${row.directCost ?? ''}" placeholder="0.00" oninput="updateScenarioAssumption('${safeText(row.id)}','directCost',this.value)"></label><label>Labor hours per unit (optional)<input type="number" min="0" step="0.1" value="${Number(row.laborHoursPerUnit)||0}" oninput="updateScenarioAssumption('${safeText(row.id)}','laborHoursPerUnit',this.value)"></label>` : ''}</div></article>`).join('');
   }
   function assumptionTotals() {
     const totals = { revenue:0, cost:0, directCost:0, oneOffRevenue:0, oneOffCost:0, oneOffDirectCost:0 };
