@@ -28,7 +28,7 @@
     .otp-code { letter-spacing: 0.35em; font-variant-numeric: tabular-nums; }
   </style>
   <link rel="stylesheet" href="/styles.css">
-  <link rel="stylesheet" href="/pro.css">
+  <link rel="stylesheet" href="/pro.css?v=20261019-inline-whatif-2">
 </head>
 <body class="h-full flex flex-col bg-slate-950 text-slate-100 overflow-x-hidden antialiased">
 
@@ -266,7 +266,8 @@
       </section>
       <section class="pro-module pro-module--wide"><div class="pro-module__heading"><div><span class="eyebrow">ALL PLANS</span><h2>Monthly break-even target</h2><p>Operating costs divided by contribution margin show the revenue needed to cover costs.</p></div></div><div id="breakEvenContent"></div></section>
       <section class="pro-module pro-module--wide"><div class="pro-module__heading"><div><span class="eyebrow">QUICK WHAT-IF</span><h2>Build a simple scenario</h2><p>Add named income or cost assumptions, with quantities, categories, currencies, and weekly, monthly, or one-time timing. Change or remove any line before calculating.</p></div></div>
-        <div class="scenario-assumption-actions"><button type="button" class="pro-button" onclick="addScenarioAssumption('revenue')">+ Add income</button><button type="button" class="pro-button pro-button--quiet" onclick="addScenarioAssumption('cost')">+ Add cost</button><span id="planStatus" class="plan-chip">FREE PLAN</span></div>
+        <div class="scenario-assumption-actions"><button type="button" class="pro-button" data-scenario-kind="revenue" aria-expanded="false" aria-controls="quickScenarioEditorHost">+ Add income</button><button type="button" class="pro-button pro-button--quiet" data-scenario-kind="cost" aria-expanded="false" aria-controls="quickScenarioEditorHost">+ Add cost</button><span id="planStatus" class="plan-chip">FREE PLAN</span></div>
+        <div id="quickScenarioEditorHost" class="hidden" aria-live="polite"></div>
         <div id="scenarioAssumptionsList" class="scenario-assumptions-list"></div>
         <div class="scenario-calculate"><button onclick="runCustomScenario()" class="pro-button">Calculate impact</button></div>
         <div id="customScenarioResult" class="hidden forecast-verdict"><span class="eyebrow">SCENARIO RESULT</span><strong>Estimated cash impact: <span id="customRunwayResult"></span></strong><div id="marginAdviceBox" class="hidden"><p id="marginAdviceText"></p></div></div>
@@ -1246,6 +1247,6 @@
 
     function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   </script>
-  <script src="/pro.js"></script>
+  <script src="/pro.js?v=20261019-inline-whatif-3"></script>
 </body>
 </html>

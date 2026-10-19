@@ -383,3 +383,118 @@
   const originalRecalculate=window.recalculateAll;
   window.recalculateAll=function(...args){const result=originalRecalculate.apply(this,args);renderProExperience();return result;};
 })();
+
+
+/* Quick What-If inline entry: keep assumptions in the scenario only, never in the base workspace. */
+(() => {
+  const host = document.getElementById('quickScenarioEditorHost');
+  if (!host) return;
+  const currencies = ['USD','EUR','GBP','HKD','SGD','CNY','JPY','AUD'];
+  const categorySets = {
+    revenue: ['Product Sales','Services','Subscription','Other'],
+    cost: ['Payroll','Direct costs','Software','Rent','Marketing','Utilities','Other']
+  };
+  const escaped = value => escapeHtml(String(value ?? ''));
+
+  function updatePreview() {
+    const form = document.getElementById('quickScenarioEntryForm');
+    if (!form) return;
+    const kind = form.dataset.kind;
+    const amount = Math.max(0, Number(form.elements.amount.value) || 0);
+    const quantity = Math.max(0, Number(form.elements.quantity.value) || 0);
+    const currencyCode = form.elements.currency.value;
+    const frequency = form.elements.frequency.value;
+    const oneTime = form.elements.timing.value === 'one-off';
+    const factor = oneTime ? 1 : (frequency === 'weekly' ? 52 / 12 : 1);
+    const gross = convert(amount * quantity * factor, currencyCode, appState.displayCurrency);
+    const directUnit = kind === 'revenue' ? Math.max(0, Number(form.elements.directCost?.value) || 0) : 0;
+    const direct = convert(directUnit * quantity * factor, currencyCode, appState.displayCurrency);
+    const preview = document.getElementById('quickScenarioEntryPreview');
+    if (preview) {
+      const period = oneTime ? 'one time' : '/ month equivalent';
+      preview.textContent = `${kind === 'cost' ? 'Cost' : 'Income'} impact: ${getSymbol(appState.displayCurrency)}${Math.round(gross).toLocaleString()} ${period}${direct > 0 ? ` · direct costs ${getSymbol(appState.displayCurrency)}${Math.round(direct).toLocaleString()}` : ''}`;
+    }
+    const frequencyField = form.elements.frequency;
+    frequencyField.disabled = oneTime;
+    const qtyLabel = document.getElementById('quickScenarioQuantityText');
+    if (qtyLabel) qtyLabel.textContent = oneTime ? 'Quantity' : (frequency === 'weekly' ? 'Times per week' : 'Quantity per month');
+  }
+
+  window.closeQuickScenarioEditor = () => {
+    host.classList.add('hidden');
+    host.innerHTML = '';
+    host.removeAttribute('data-kind');
+    document.querySelectorAll('[data-scenario-kind]').forEach(button => button.setAttribute('aria-expanded','false'));
+  };
+
+  window.openQuickScenarioEditor = kindValue => {
+    const kind = kindValue === 'cost' ? 'cost' : 'revenue';
+    const title = kind === 'cost' ? 'Add cost to this scenario' : 'Add income to this scenario';
+    const categories = categorySets[kind];
+    const categoryOptions = categories.map(value => `<option value="${escaped(value)}">${escaped(value)}</option>`).join('');
+    const currencyOptions = currencies.map(value => `<option value="${value}" ${value === appState.displayCurrency ? 'selected' : ''}>${value}</option>`).join('');
+    host.innerHTML = `
+      <section class="scenario-entry-panel" role="region" aria-labelledby="quickScenarioEntryTitle">
+        <div class="scenario-entry-panel__top">
+          <div><span class="eyebrow">WHAT-IF ONLY · YOUR WORKSPACE WILL NOT CHANGE</span><h3 id="quickScenarioEntryTitle">${title}</h3></div>
+          <button type="button" class="inline-text-button" data-close-scenario-entry>Cancel</button>
+        </div>
+        <p class="scenario-entry-panel__hint">Enter the same details as a dashboard item. This line is saved only to the scenario below.</p>
+        <form id="quickScenarioEntryForm" data-kind="${kind}">
+          <div class="scenario-entry-panel__grid">
+            <label>Name<input name="name" type="text" required maxlength="100" placeholder="e.g. New client contract"></label>
+            <label>Amount per occurrence<input name="amount" type="number" min="0" step="0.01" required placeholder="200.00"></label>
+            <label><span id="quickScenarioQuantityText">Quantity per month</span><input name="quantity" type="number" min="0" step="0.1" required value="1"></label>
+            <label>Frequency<select name="frequency"><option value="monthly">Monthly</option><option value="weekly">Weekly</option></select></label>
+            <label>Currency<select name="currency">${currencyOptions}</select></label>
+            <label>Category<select name="category">${categoryOptions}</select></label>
+            <label>Timing<select name="timing"><option value="recurring">Recurring</option><option value="one-off">One-time</option></select></label>
+            ${kind === 'revenue' ? `<label>Direct cost per unit (optional)<input name="directCost" type="number" min="0" step="0.01" placeholder="0.00"></label><label>Labor hours per unit (optional)<input name="laborHoursPerUnit" type="number" min="0" step="0.1" placeholder="0.0"></label>` : ''}
+          </div>
+          <div class="scenario-entry-panel__bottom"><p id="quickScenarioEntryPreview" aria-live="polite"></p><div><button type="button" class="pro-button pro-button--quiet" data-close-scenario-entry>Cancel</button><button type="submit" class="pro-button">Add to What-If</button></div></div>
+        </form>
+      </section>`;
+    host.dataset.kind = kind;
+    host.classList.remove('hidden');
+    document.querySelectorAll('[data-scenario-kind]').forEach(button => button.setAttribute('aria-expanded', button.dataset.scenarioKind === kind ? 'true' : 'false'));
+
+    const form = document.getElementById('quickScenarioEntryForm');
+    form.querySelectorAll('input,select').forEach(field => field.addEventListener('input', updatePreview));
+    form.querySelectorAll('select').forEach(field => field.addEventListener('change', updatePreview));
+    form.querySelectorAll('[data-close-scenario-entry]').forEach(button => button.addEventListener('click', window.closeQuickScenarioEditor));
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+      const values = new FormData(form);
+      const amount = Number(values.get('amount'));
+      const quantity = Number(values.get('quantity'));
+      const directText = String(values.get('directCost') ?? '').trim();
+      const laborText = String(values.get('laborHoursPerUnit') ?? '').trim();
+      window.addScenarioAssumptionFromForm({
+        kind,
+        name: String(values.get('name') ?? '').trim(),
+        category: String(values.get('category') ?? 'Other'),
+        amount,
+        quantity,
+        frequency: values.get('timing') === 'one-off' ? 'once' : String(values.get('frequency') ?? 'monthly'),
+        currency: currencies.includes(String(values.get('currency'))) ? String(values.get('currency')) : appState.displayCurrency,
+        directCost: kind === 'revenue' && directText !== '' ? Number(directText) : null,
+        laborHoursPerUnit: kind === 'revenue' && laborText !== '' ? Number(laborText) : 0
+      });
+      window.closeQuickScenarioEditor();
+    });
+    updatePreview();
+    requestAnimationFrame(() => {
+      host.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      form.elements.name.focus({ preventScroll: true });
+    });
+  };
+
+  // Keep compatibility with any already-rendered page markup, while making the buttons use this inline flow.
+  window.openScenarioItemModal = window.openQuickScenarioEditor;
+  window.addScenarioAssumption = window.openQuickScenarioEditor;
+  document.querySelectorAll('[data-scenario-kind]').forEach(button => {
+    button.removeAttribute('onclick');
+    button.addEventListener('click', () => window.openQuickScenarioEditor(button.dataset.scenarioKind));
+  });
+})();

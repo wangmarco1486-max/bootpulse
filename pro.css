@@ -147,3 +147,20 @@
 .ops-waste-history ul { margin:5px 0 0; padding-left:14px; color:#758179; font-size:8px; }
 .ops-status-list { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:4px; }
 @media(max-width:640px) { .ops-waste-form form { grid-template-columns:1fr 1fr; } .ops-status-list { justify-content:flex-start; } }
+
+
+/* Clearly visible in-panel editor for Quick What-If assumptions. */
+.scenario-entry-panel { margin:14px 0; padding:17px; border:1px solid #b9cabe; border-left:4px solid var(--forest); border-radius:5px; background:#f6faf7; box-shadow:0 4px 12px rgba(15,23,42,.04); }
+.scenario-entry-panel__top,.scenario-entry-panel__bottom { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+.scenario-entry-panel__top h3 { margin:5px 0 0; color:var(--ink); font-size:18px; line-height:1.2; letter-spacing:-.04em; font-weight:650; }
+.scenario-entry-panel__hint { margin:7px 0 13px; color:#68766e; font-size:11px; }
+.scenario-entry-panel__grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.scenario-entry-panel__grid label { display:block; min-width:0; color:#526258; font-size:10px; font-weight:650; }
+.scenario-entry-panel__grid input,.scenario-entry-panel__grid select { display:block; width:100%; min-width:0; margin-top:5px; padding:9px 10px; border:1px solid #d6e0d9; border-radius:4px; background:#fff; color:#17251d; font:inherit; font-size:12px; }
+.scenario-entry-panel__grid input:focus,.scenario-entry-panel__grid select:focus { outline:2px solid #dbe9df; border-color:#597666; }
+.scenario-entry-panel__bottom { margin-top:13px; padding-top:11px; border-top:1px solid #dfe8e2; }
+.scenario-entry-panel__bottom p { margin:0; color:#425a4c; font-size:10px; font-weight:600; }
+.scenario-entry-panel__bottom > div { display:flex; flex-wrap:wrap; gap:8px; }
+.scenario-entry-panel__grid select:disabled { color:#89938d; background:#f3f5f3; }
+@media(max-width:760px) { .scenario-entry-panel__grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:520px) { .scenario-entry-panel { padding:13px; } .scenario-entry-panel__grid { grid-template-columns:1fr; } .scenario-entry-panel__bottom { align-items:flex-start; flex-direction:column; } }
